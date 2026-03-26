@@ -16,28 +16,41 @@ import torch.nn as nn
 import torch.optim as optim
 
 from engine import *
-from agent import SimpleRuleAgent, SmarterRuleAgent
+from agent import SimpleRuleAgent, SmarterRuleAgent, TacticalRuleAgent, GeniusRuleAgent, BoxFarmerAgent
 
 class ReplayBuffer:
-    def __init__(self, capacity):
-        self.capacity = capacity
-        self.buf = []
-        self.pos = 0
+    """Pre-allocated numpy circular buffer — sample() is pure array indexing, no Python objects."""
+    def __init__(self, capacity: int, state_dim: int):
+        self.capacity  = capacity
+        self.pos       = 0
+        self.size      = 0
+        self.states      = np.zeros((capacity, state_dim), dtype=np.float32)
+        self.next_states = np.zeros((capacity, state_dim), dtype=np.float32)
+        self.actions     = np.zeros(capacity,              dtype=np.int64)
+        self.rewards     = np.zeros(capacity,              dtype=np.float32)
+        self.dones       = np.zeros(capacity,              dtype=np.float32)
 
     def __len__(self):
-        return len(self.buf)
+        return self.size
 
     def push(self, state, action, reward, next_state, done):
-        if len(self.buf) < self.capacity:
-            self.buf.append((state, action, reward, next_state, done))
-        else:
-            self.buf[self.pos] = (state, action, reward, next_state, done)
-        self.pos = (self.pos + 1) % self.capacity
+        self.states[self.pos]      = state
+        self.next_states[self.pos] = next_state
+        self.actions[self.pos]     = action
+        self.rewards[self.pos]     = reward
+        self.dones[self.pos]       = float(done)
+        self.pos  = (self.pos + 1) % self.capacity
+        self.size = min(self.size + 1, self.capacity)
 
-    def sample(self, batch_size):
-        indices = random.sample(range(len(self.buf)), batch_size)
-        state, action, reward, next_state, done = zip(*[self.buf[i] for i in indices])
-        return np.array(state), np.array(action), np.array(reward), np.array(next_state), np.array(done)
+    def sample(self, batch_size: int):
+        idx = np.random.randint(0, self.size, size=batch_size)
+        return (
+            self.states[idx],
+            self.actions[idx],
+            self.rewards[idx],
+            self.next_states[idx],
+            self.dones[idx],
+        )
 
 class DQNModel(nn.Module):
     def __init__(self, input_dim, output_dim):
@@ -56,10 +69,10 @@ class DQNModel(nn.Module):
         return self.net(x)
 
 class DQNAgent:
-    def __init__(self, player_id, input_dim, num_actions):
-        self.player_id = player_id
+    def __init__(self, agent_id: int, input_dim: int, num_actions: int, device: str="cpu"):
+        self.agent_id = agent_id
         self.num_actions = num_actions
-        
+        self.device = device
         self.gamma = 0.99
         self.lr = 1e-3
         
@@ -71,51 +84,55 @@ class DQNAgent:
         self.optimizer = optim.Adam(self.q_net.parameters(), lr=self.lr, eps=1e-08, weight_decay=1e-5)
         self.loss_fn = nn.MSELoss()
 
-    def act(self, obs, epsilon=0.0, enemy_ids=[1]):
+    def act(self, state_enc: np.ndarray, epsilon=0.0):
+        """Takes a pre-encoded state vector to avoid redundant encode_obs calls."""
         # Epsilon-Greedy Action Selection
         if random.random() < epsilon:
             return random.randint(0, self.num_actions - 1)
         
-        state = encode_obs(obs, [self.player_id, *enemy_ids])
-        state_tensor = torch.FloatTensor(state).unsqueeze(0) # add batch dim
-        
+        state_tensor = torch.from_numpy(state_enc).unsqueeze(0).to(self.device)
+
         with torch.no_grad():
-            q_values = self.q_net(state_tensor)
-            action = torch.argmax(q_values).item()
+            action = self.q_net(state_tensor).argmax().item()
             
         # action with the highest predicted Q-value
         return action
 
     def train_step(self, buffer, batch_size):
         if len(buffer) < batch_size:
-            return # Not enough data to train yet
-            
-        # 1. Sample from replay buffer
+            return
+
         state, action, reward, next_state, done = buffer.sample(batch_size)
-        
-        state = torch.FloatTensor(state)
-        action = torch.LongTensor(action).unsqueeze(1)
-        reward = torch.FloatTensor(reward).unsqueeze(1)
-        next_state = torch.FloatTensor(next_state)
-        done = torch.FloatTensor(done).unsqueeze(1)
-        
+
+        # torch.from_numpy is zero-copy; only move to device when not CPU
+        state_t      = torch.from_numpy(state)
+        next_state_t = torch.from_numpy(next_state)
+        action_t     = torch.from_numpy(action).unsqueeze(1)
+        reward_t     = torch.from_numpy(reward).unsqueeze(1)
+        done_t       = torch.from_numpy(done).unsqueeze(1)
+        if self.device != "cpu":
+            state_t      = state_t.to(self.device)
+            next_state_t = next_state_t.to(self.device)
+            action_t     = action_t.to(self.device)
+            reward_t     = reward_t.to(self.device)
+            done_t       = done_t.to(self.device)
+
         # 2. Calculate current Q-values: Q(s, a)
         # gather() extracts the Q-value for the specific action taken
-        q_values = self.q_net(state).gather(1, action)
-        
-        # 3. Calculate Target Q-values using Bellman equation
-        with torch.no_grad():
-            # max(1)[0] gets the max Q-value for the next state
+        q_values = self.q_net(state_t).gather(1, action_t)
+
+        # max(1)[0] gets the max Q-value for the next state
             # ~ max_a' {Q(s', a', weights)}
-            max_next_q = self.target_net(next_state).max(1)[0].unsqueeze(1)
-            # If done=1, the future reward is 0.
+        # If done=1, the future reward is 0.
             # Q*(s, a) = E[r + gamma * max_a' {Q*(s', a')}]
             # ~ Q(s, a) = r + gamma * max_a' {Q(s', a', weights)} if not done else Q(s, a) = r
-            target_q = reward + self.gamma * max_next_q * (1 - done)
-            
-        # 4. Caclulate loss, backward,...
+        # inference_mode is stricter than no_grad: disables autograd engine entirely
+        with torch.no_grad():
+            max_next_q = self.target_net(next_state_t).max(1)[0].unsqueeze(1)
+            target_q   = reward_t + self.gamma * max_next_q * (1 - done_t)
+
         loss = self.loss_fn(q_values, target_q)
-        self.optimizer.zero_grad()
+        self.optimizer.zero_grad(set_to_none=True)  # skip memset, just nullify refs
         loss.backward()
         self.optimizer.step()
         
@@ -234,23 +251,31 @@ def train_dqn(user_id=0, enemy_type="simple", num_episodes=100, max_steps=500, s
         enemy_agent = SimpleRuleAgent(1)
     elif enemy_type == "smarter":
         enemy_agent = SmarterRuleAgent(1)
+    elif enemy_type == "tactical":
+        enemy_agent = TacticalRuleAgent(1)
+    elif enemy_type == "genius":
+        enemy_agent = GeniusRuleAgent(1)
+    elif enemy_type == "box_farmer":
+        enemy_agent = BoxFarmerAgent(1)
     else:
         raise ValueError(f"Invalid enemy type: {enemy_type}")
 
     # hyperparam
-    epsilon_start = 1.0
-    epsilon_min = 0.05
-    epsilon_decay = 0.995
-    epsilon = epsilon_start
-    batch_size = 64 
-    
+    epsilon_start      = 1.0
+    epsilon_min        = 0.05
+    epsilon_decay      = 0.995
+    epsilon            = epsilon_start
+    batch_size         = 64
+
     dummy_obs = env.reset(seed=seed)
-    sample_state = encode_obs(dummy_obs, agent_ids=[user_id, enemy_agent.player_id])
+    agent_ids = [user_id, enemy_agent.agent_id]
+    sample_state = encode_obs(dummy_obs, agent_ids=agent_ids)
     input_dim = len(sample_state)
     num_actions = 6
-    user_agent = DQNAgent(user_id, input_dim, num_actions)
-    buffer = ReplayBuffer(capacity=10_000)
+    user_agent = DQNAgent(user_id, input_dim, num_actions, device="cuda" if torch.cuda.is_available() else "cpu")
+    buffer = ReplayBuffer(capacity=10_000, state_dim=input_dim)
 
+    global_step = 0
     with tqdm(total=num_episodes, desc="Training DQN") as pbar:
         for ep in range(num_episodes):
             obs = env.reset(seed=seed + ep)
@@ -258,58 +283,47 @@ def train_dqn(user_id=0, enemy_type="simple", num_episodes=100, max_steps=500, s
             prev_obs = None
             total_reward = 0
 
-            for t in range(max_steps):
-                # Action
-                user_action = user_agent.act(obs, epsilon=epsilon, enemy_ids=[enemy_agent.player_id])
+            state_enc = encode_obs(obs, agent_ids)
+
+            for _ in range(max_steps):
+                user_action  = user_agent.act(state_enc, epsilon=epsilon)
                 enemy_action = enemy_agent.act(obs)
                 actions = [None, None]
-                actions[user_id] = user_action
-                actions[enemy_agent.player_id] = enemy_action
+                actions[user_id]              = user_action
+                actions[enemy_agent.agent_id] = enemy_action
 
-                # Step
                 next_obs, terminated, truncated = env.step(actions)
                 done = terminated or truncated
-                
-                # Calculate reward
+
                 r = compute_reward(prev_obs, next_obs, agent_id=user_id)
                 total_reward += r
-                # if enemy agent is dead, reward is 1.0
-                if enemy_agent.player_id == 1 and not next_obs["players"][1][2]:
+                if not next_obs["players"][enemy_agent.agent_id][2]:
                     r += 1.0
 
-                # Store in buffer
-                state = encode_obs(obs, [user_id, enemy_agent.player_id])
-                next_state = encode_obs(next_obs, [user_id, enemy_agent.player_id])
-                # print("state: ", state)
-                # print("next_state: ", next_state)
-                # print("user_action: ", user_action)
-                # print("r: ", r)
-                # print("done: ", done)
-                # print("--------------------------------\n\n")
-                buffer.push(state, user_action, r, next_state, done)
+                next_state_enc = encode_obs(next_obs, agent_ids)
+                buffer.push(state_enc, user_action, r, next_state_enc, done)
 
-                # Train
+                global_step += 1
                 user_agent.train_step(buffer, batch_size)
 
-                prev_obs = obs
-                obs = next_obs
+                prev_obs  = obs
+                obs       = next_obs
+                state_enc = next_state_enc
                 if done:
                     break
-            # Decay epsilon at the end of each episode
+
             epsilon = max(epsilon_min, epsilon * epsilon_decay)
-            # Update Target Network every 10 episodes
             if ep % 10 == 0:
                 user_agent.update_target_network()
             pbar.update(1)
-            pbar.set_postfix(reward=total_reward, epsilon=epsilon)
+            pbar.set_postfix(reward=f"{total_reward:.2f}", epsilon=f"{epsilon:.3f}")
         
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--enemy_type", type=str, default="simple")
-    parser.add_argument("--num_episodes", type=int, default=200)
-    parser.add_argument("--max_steps", type=int, default=500)
-    parser.add_argument("--seed", type=int, default=86)
+    parser.add_argument("--enemy_type", type=str, default="simple", choices=["simple", "smarter", "tactical", "genius", "box_farmer"])
+    parser.add_argument("--num_episodes", type=int, default=200, help="Number of episodes to train")
+    parser.add_argument("--max_steps", type=int, default=500, help="Maximum number of steps per episode")
+    parser.add_argument("--seed", type=int, default=86, help="Random seed for reproducibility")
     args = parser.parse_args()
     train_dqn(enemy_type=args.enemy_type, num_episodes=args.num_episodes, max_steps=args.max_steps, seed=args.seed)
-    # env = BomberEnv()
