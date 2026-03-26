@@ -8,12 +8,9 @@ if str(parent_dir) not in sys.path:
     sys.path.insert(0, str(parent_dir))
 
 from engine.game import BomberEnv
-from agent.random_agent import RandomAgent
-from agent.simple_rule_agent import SimpleRuleAgent
-from agent.smarter_rule_agent import SmarterRuleAgent
-from agent.genius_rule_agent import GeniusRuleAgent
-from agent.box_farmer_agent import BoxFarmerAgent
-from agent.tactical_rule_agent import TacticalRuleAgent
+from agent import RandomAgent, SimpleRuleAgent, SmarterRuleAgent, GeniusRuleAgent, BoxFarmerAgent, TacticalRuleAgent
+from training.DQN import DQNAgent
+import torch
 
 def run_match(model_paths, num_episodes=10, max_steps=500, seed=None):
     env = BomberEnv(max_steps=max_steps, seed=seed)
@@ -28,7 +25,7 @@ def run_match(model_paths, num_episodes=10, max_steps=500, seed=None):
         if path != "None":
             # suppose submission file is /agent/team_name/agent.py -> extract team_name as agent name
             info[i]["name"] = path.split("/")[-2]
-            pass # TODO: train models -> load models from model_paths and create agents for testing
+            agents[i] = DQNAgent(i, input_dim, num_actions, lr=1e-3, device="cuda" if torch.cuda.is_available() else "cpu", pretrained_model=path)
                 
         else:
             # Random rule-based agent for headless testing
