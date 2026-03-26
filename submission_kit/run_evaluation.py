@@ -1,3 +1,4 @@
+import os
 import random
 import argparse
 import sys
@@ -7,10 +8,12 @@ parent_dir = Path(__file__).resolve().parent.parent
 if str(parent_dir) not in sys.path:
     sys.path.insert(0, str(parent_dir))
 
+
+import torch
+
 from engine.game import BomberEnv
 from agent import RandomAgent, SimpleRuleAgent, SmarterRuleAgent, GeniusRuleAgent, BoxFarmerAgent, TacticalRuleAgent
-from training.DQN import DQNAgent
-import torch
+from training.DQN import DQNAgent, encode_obs
 
 def run_match(model_paths, num_episodes=10, max_steps=500, seed=None):
     env = BomberEnv(max_steps=max_steps, seed=seed)
@@ -24,9 +27,12 @@ def run_match(model_paths, num_episodes=10, max_steps=500, seed=None):
     for i, path in enumerate(model_paths):
         if path != "None":
             # suppose submission file is /agent/team_name/agent.py -> extract team_name as agent name
-            info[i]["name"] = path.split("/")[-2]
+            checkpoint = torch.load(path)
+            input_dim = checkpoint["input_dim"]
+            num_actions = checkpoint["num_actions"]
             agents[i] = DQNAgent(i, input_dim, num_actions, lr=1e-3, device="cuda" if torch.cuda.is_available() else "cpu", pretrained_model=path)
-                
+            agents[i].load_agent(pretrained_model=path)
+            info[i]["name"] = os.path.basename(path)
         else:
             # Random rule-based agent for headless testing
             x = random.randint(0, 6)
@@ -52,13 +58,20 @@ def run_match(model_paths, num_episodes=10, max_steps=500, seed=None):
     for episode in range(num_episodes):
         episode_seed = None if seed is None else seed + episode
         obs = env.reset(seed=episode_seed)
+        encoded_obs = encode_obs(obs, agent_ids=[i for i in range(n_players)])
         done = False
         step = 0
         death_order = []
         prev_alive = [bool(p[2]) for p in obs["players"]]
 
         while not done and step < max_steps:
-            actions = [agent.act(obs) for agent in agents]
+            # actions = [agent.act(obs) for agent in agents]
+            actions = []
+            for i in range(len(agents)):
+                if isinstance(agents[i], DQNAgent):
+                    actions.append(agents[i].act(encoded_obs, epsilon=0.05))
+                else:
+                    actions.append(agents[i].act(obs))
             obs, terminated, truncated = env.step(actions)
             done = terminated or truncated
             step += 1

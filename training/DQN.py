@@ -291,7 +291,7 @@ def encode_obs(obs, agent_ids):
     ], axis=0)
     return feat
 
-def save_model(model, optimizer, global_step, epsilon, lr, input_dim, num_actions, path):
+def save_model_fn(model, optimizer, global_step, epsilon, lr, input_dim, num_actions, path):
     checkpoint = {
         "model_state_dict": model.state_dict(),
         "optimizer_state_dict": optimizer.state_dict(),
@@ -301,9 +301,11 @@ def save_model(model, optimizer, global_step, epsilon, lr, input_dim, num_action
         "input_dim": input_dim,
         "num_actions": num_actions,
     }
+    os.makedirs(os.path.dirname(path), exist_ok=True)
     torch.save(checkpoint, path)
+    print(f"Model saved to {path}")
 
-def load_model(checkpoint):
+def load_model_fn(checkpoint):
     """
     Args:
         checkpoint: dict
@@ -398,8 +400,8 @@ def train_dqn(user_id=0, enemy_type="simple", num_episodes=100, max_steps=500, s
             pbar.set_postfix(reward=f"{total_reward:.2f}", epsilon=f"{epsilon:.3f}")
 
     if save_model:
-        model_path = f"models/dqn_{enemy_type}_{num_episodes}_episodes_{max_steps}_steps_{seed}_seed_{user_agent.global_step}_global_step.pth"
-        save_model(user_agent.q_net, 
+        model_path = f"ckpts/dqn_{enemy_type}_{num_episodes}_episodes_{max_steps}_steps_{seed}_seed_{user_agent.global_step}_global_step.pth"
+        save_model_fn(user_agent.q_net, 
                     user_agent.optimizer, 
                     user_agent.global_step, 
                     user_agent.epsilon, 
@@ -415,11 +417,12 @@ if __name__ == "__main__":
     parser.add_argument("--num_episodes", type=int, default=200, help="Number of episodes to train")
     parser.add_argument("--max_steps", type=int, default=500, help="Maximum number of steps per episode")
     parser.add_argument("--seed", type=int, default=86, help="Random seed for reproducibility")
-    parser.add_argument("--save_model", type=bool, default=True, help="Save model")
+    parser.add_argument("--save_model", action="store_true", help="Save model")
     parser.add_argument("--load_model", type=str, default=None, help="Load model")
-    parser.add_argument("--skip_training", type=bool, default=False, help="Skip training")
+    parser.add_argument("--skip_training", action="store_true", help="Skip training")
     args = parser.parse_args()
     
+    print("Skip training? ", args.skip_training)
     if not args.skip_training:
         train_dqn(enemy_type=args.enemy_type, 
                     num_episodes=args.num_episodes, 

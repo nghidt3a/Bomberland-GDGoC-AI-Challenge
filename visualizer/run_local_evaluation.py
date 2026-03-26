@@ -1,3 +1,4 @@
+import os
 import argparse
 import random
 import sys
@@ -6,19 +7,15 @@ from pathlib import Path
 
 import numpy as np
 import pygame
-
+import torch
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
 if str(ROOT_DIR) not in sys.path:
 	sys.path.append(str(ROOT_DIR))
 
 from engine.game import BomberEnv
-from agent.random_agent import RandomAgent
-from agent.simple_rule_agent import SimpleRuleAgent
-from agent.smarter_rule_agent import SmarterRuleAgent
-from agent.genius_rule_agent import GeniusRuleAgent
-from agent.box_farmer_agent import BoxFarmerAgent
-from agent.tactical_rule_agent import TacticalRuleAgent
+from agent import RandomAgent, SimpleRuleAgent, SmarterRuleAgent, TacticalRuleAgent, GeniusRuleAgent, BoxFarmerAgent
+from training.DQN import DQNAgent, encode_obs
 
 class Viewer:
 	def __init__(self, width=13, height=13, cell_size=42, fps=8):
@@ -194,8 +191,12 @@ def make_agents(model_paths, seed=None):
 
 	for i, path in enumerate(model_paths):
 		if path != "None":
-			names[i] = path.split("/")[-2] if "/" in path else f"ModelAgent{i}"
-			pass # TODO: train models -> load models from model_paths and create agents for testing
+			checkpoint = torch.load(path)
+			input_dim = checkpoint["input_dim"]
+			num_actions = checkpoint["num_actions"]
+			agents[i] = DQNAgent(i, input_dim, num_actions, lr=1e-3, device="cuda" if torch.cuda.is_available() else "cpu", pretrained_model=path)
+			agents[i].load_agent(pretrained_model=path)
+			names[i] = os.path.basename(path)
 		else:
 			x = random.randint(0, 6)
 			if x == 0:
@@ -236,12 +237,18 @@ def simulate_episodes(model_paths, num_episodes=10, max_steps=500, seed=None):
 	for episode in range(num_episodes):
 		episode_seed = None if seed is None else seed + episode
 		obs = env.reset(seed=episode_seed)
+		encoded_obs = encode_obs(obs, agent_ids=[i for i in range(len(agents))])
 		done = False
 		step = 0
 		trajectory = [clone_obs(obs)]
 
 		while not done and step < max_steps:
-			actions = [agent.act(obs) for agent in agents]
+			actions = []
+			for i in range(len(agents)):
+				if isinstance(agents[i], DQNAgent):
+					actions.append(agents[i].act(encoded_obs, epsilon=0.05))
+				else:
+					actions.append(agents[i].act(obs))
 			obs, terminated, truncated = env.step(actions)
 			trajectory.append(clone_obs(obs))
 			done = terminated or truncated
