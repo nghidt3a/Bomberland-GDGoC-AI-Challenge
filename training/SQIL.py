@@ -647,6 +647,10 @@ def train_dqfd(
     margin_loss_history = []
     reward_history = []
     ep_reward_history = []
+    
+    tag = (f"dqfd_{expert_type}_{enemy_type}_"
+           f"{num_episodes}ep_{max_steps}steps_{seed}seed")
+    model_folder = f"ckpts/{tag}"
 
     with tqdm(total=num_episodes, desc="DQfD Training") as pbar:
         for ep in range(num_episodes):
@@ -705,13 +709,15 @@ def train_dqfd(
                 eps=f"{epsilon:.3f}",
                 lbc=f"{lambda_bc:.2f}",
             )
+            # save the model
+            if ep % 1000 == 0:
+                path = f"{model_folder}/{agent.global_step}_global_step.pth"
+                save_model_fn(agent.q_net, agent.optimizer, agent.global_step,
+                            agent.epsilon, agent.lr, input_spec, NUM_ACTIONS, path)
 
     # ------------------------------------------------------------------
     # Save & plot
     # ------------------------------------------------------------------
-    tag = (f"dqfd_{expert_type}_{enemy_type}_"
-           f"{num_episodes}ep_{max_steps}steps_{seed}seed")
-    model_folder = f"ckpts/{tag}"
 
     if save_model:
         path = f"{model_folder}/{agent.global_step}_global_step.pth"
