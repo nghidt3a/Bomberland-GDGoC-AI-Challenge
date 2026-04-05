@@ -24,78 +24,17 @@ import torch.nn.functional as F
 import torch.optim as optim
 import os
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
-
-from engine import BomberEnv, Map, Player
-from reward import compute_reward
-from utils import plot_loss, plot_rewards, plot_moving_average
-from agent import (
-    SimpleRuleAgent, SmarterRuleAgent, TacticalRuleAgent,
-    GeniusRuleAgent, BoxFarmerAgent,
+from engine import BomberEnv
+from .reward import compute_reward
+from .utils import plot_loss, plot_rewards, plot_moving_average
+from .bomber_shared import (
+    AGENT_LOOKUP,
+    NUM_ACTIONS,
+    ReplayBuffer,
+    _make_agent,
+    encode_obs,
+    collect_demonstrations,
 )
-
-# ======================================================================
-# Reusable components (self-contained to avoid DQN.py import issues)
-# ======================================================================
-
-BOMB_MAX_TIMER = 7
-NUM_ACTIONS = 6
-
-AGENT_LOOKUP = {
-    "genius":     GeniusRuleAgent,
-    "tactical":   TacticalRuleAgent,
-    "smarter":    SmarterRuleAgent,
-    "simple":     SimpleRuleAgent,
-    "box_farmer": BoxFarmerAgent,
-}
-
-
-def _make_agent(name: str, agent_id: int):
-    cls = AGENT_LOOKUP.get(name)
-    if cls is None:
-        raise ValueError(f"Unknown agent type: {name}")
-    return cls(agent_id)
-
-
-class ReplayBuffer:
-    """Pre-allocated numpy circular buffer."""
-
-    def __init__(self, capacity: int, map_shape, aux_dim: int):
-        self.capacity = capacity
-        self.pos = 0
-        self.size = 0
-        self.map_shape = tuple(map_shape)
-        self.aux_dim = int(aux_dim)
-        self.map_states = np.zeros((capacity, *self.map_shape), dtype=np.float32)
-        self.aux_states = np.zeros((capacity, self.aux_dim), dtype=np.float32)
-        self.next_map_states = np.zeros((capacity, *self.map_shape), dtype=np.float32)
-        self.next_aux_states = np.zeros((capacity, self.aux_dim), dtype=np.float32)
-        self.actions = np.zeros(capacity, dtype=np.int64)
-        self.rewards = np.zeros(capacity, dtype=np.float32)
-        self.dones = np.zeros(capacity, dtype=np.float32)
-
-    def __len__(self):
-        return self.size
-
-    def push(self, map_state, aux_state, action, reward,
-             next_map_state, next_aux_state, done):
-        self.pos = (self.pos + 1) % self.capacity
-        self.size = min(self.size + 1, self.capacity)
-        self.map_states[self.pos] = map_state
-        self.aux_states[self.pos] = aux_state
-        self.next_map_states[self.pos] = next_map_state
-        self.next_aux_states[self.pos] = next_aux_state
-        self.actions[self.pos] = action
-        self.rewards[self.pos] = reward
-        self.dones[self.pos] = done
-
-    def sample(self, batch_size: int):
-        idx = np.random.randint(0, self.size, size=batch_size)
-        return (
-            self.map_states[idx], self.aux_states[idx],
-            self.next_map_states[idx], self.next_aux_states[idx],
-            self.actions[idx], self.rewards[idx], self.dones[idx],
-        )
 
 
 class DQNModel(nn.Module):
@@ -186,79 +125,6 @@ class DQNModel(nn.Module):
         return self.head(torch.cat([map_feat, aux_feat], dim=1))
 
 
-def encode_obs(obs, agent_ids):
-    """Encode raw observation into (map_feat [C,H,W], aux_feat [A,]).
-
-    agent_ids can be:
-    - [user_id, opp_id] (legacy 2-agent encoding)
-    - [user_id, opp1_id, opp2_id, opp3_id] (4-agent encoding)
-    - [user_id] (will auto-fill opponents from obs["players"])
-    """
-    if obs is None:
-        raise ValueError("obs should not be None")
-    user_id = int(agent_ids[0])
-    players = obs["players"]
-    num_players = int(players.shape[0])
-
-    if len(agent_ids) > 1:
-        ordered_ids = [int(i) for i in agent_ids]
-    else:
-        ordered_ids = [user_id] + [i for i in range(num_players) if i != user_id]
-
-    opp_ids = [i for i in ordered_ids[1:] if i != user_id]
-    while len(opp_ids) < 3:
-        opp_ids.append(-1)
-
-    grid = obs["map"]
-    bombs = obs["bombs"]
-    H, W = grid.shape
-
-    map_channels = [(grid == v).astype(np.float32)
-                    for v in (Map.GRASS, Map.WALL, Map.BOX, Map.ITEM_RADIUS, Map.ITEM_CAPACITY)]
-
-    my_x, my_y, my_alive, my_bombs_left, my_radius_bonus = players[user_id]
-    my_pos = np.zeros((H, W), dtype=np.float32)
-    if int(my_alive) == 1:
-        my_pos[int(my_x), int(my_y)] = 1.0
-
-    opp_pos_planes = []
-    opp_alive_flags = []
-    for oid in opp_ids[:3]:
-        plane = np.zeros((H, W), dtype=np.float32)
-        alive_flag = 0.0
-        if 0 <= oid < num_players:
-            ox, oy, o_alive, _, _ = players[oid]
-            if int(o_alive) == 1:
-                plane[int(ox), int(oy)] = 1.0
-                alive_flag = 1.0
-        opp_pos_planes.append(plane)
-        opp_alive_flags.append(alive_flag)
-
-    bomb_timer = np.zeros((H, W), dtype=np.float32)
-    bomb_owned = np.zeros((H, W), dtype=np.float32)
-    for b in bombs:
-        bx, by, timer, owner_id = b
-        bx, by = int(bx), int(by)
-        bomb_timer[bx, by] = max(bomb_timer[bx, by], float(timer) / BOMB_MAX_TIMER)
-        bomb_owned[bx, by] = 1.0 if int(owner_id) == user_id else 0.0
-
-    scalar = np.array([
-        float(my_bombs_left) / Player.MAX_BOMB_CAPACITY,
-        float(my_radius_bonus) / Player.MAX_BOMB_RADIUS,
-        *opp_alive_flags[:3],
-    ], dtype=np.float32)
-
-    map_feat = np.stack([
-        *map_channels,
-        my_pos,
-        *opp_pos_planes[:3],
-        bomb_timer,
-        bomb_owned,
-    ],
-                        axis=0).astype(np.float32)
-    return map_feat, scalar
-
-
 def save_model_fn(model, optimizer, global_step, epsilon, lr, input_spec,
                   num_actions, path):
     os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -273,132 +139,7 @@ def save_model_fn(model, optimizer, global_step, epsilon, lr, input_spec,
 
 
 # ======================================================================
-# 1. Data Augmentation
-# ======================================================================
-
-_HFLIP_ACTION = np.array([0, 2, 1, 3, 4, 5], dtype=np.int64)
-_VFLIP_ACTION = np.array([0, 1, 2, 4, 3, 5], dtype=np.int64)
-_HVFLIP_ACTION = np.array([0, 2, 1, 4, 3, 5], dtype=np.int64)
-
-
-def augment_transition(map_state, aux_state, action):
-    """Return 3 augmented copies: h-flip, v-flip, hv-flip.
-
-    map_state: (C, H, W), aux_state: (A,), action: int
-    Returns list of (map, aux, action) tuples.
-    """
-    h_map = np.flip(map_state, axis=1).copy()
-    v_map = np.flip(map_state, axis=2).copy()
-    hv_map = np.flip(np.flip(map_state, axis=1), axis=2).copy()
-
-    return [
-        (h_map, aux_state.copy(), int(_HFLIP_ACTION[action])),
-        (v_map, aux_state.copy(), int(_VFLIP_ACTION[action])),
-        (hv_map, aux_state.copy(), int(_HVFLIP_ACTION[action])),
-    ]
-
-
-# ======================================================================
-# 2. Demonstration Collection (enhanced: win-filtering + real rewards)
-# ======================================================================
-
-def collect_demonstrations(expert_type, opponent_type, num_episodes,
-                           max_steps, seed, augment=True):
-    """Collect expert demonstrations, keeping only winning episodes.
-
-    Returns
-    -------
-    bc_data : dict  with keys 'map', 'aux', 'action' — numpy arrays for BC
-    demo_buffer : ReplayBuffer  filled with real rewards for DQfD
-    input_spec : tuple
-    """
-    env = BomberEnv(max_steps=max_steps, seed=seed)
-    expert_id = 0
-    expert = _make_agent(expert_type, agent_id=expert_id)
-
-    # BomberEnv always has 4 players (0..3). Fill all opponents.
-    opp_ids = [i for i in range(4) if i != expert_id]
-    opponents = [_make_agent(opponent_type, agent_id=i) for i in opp_ids]
-    agent_ids = [expert_id, *opp_ids]
-
-    dummy_obs = env.reset(seed=seed)
-    sample = encode_obs(dummy_obs, agent_ids)
-    input_spec = (sample[0].shape, sample[1].shape[0])
-
-    bc_maps, bc_auxs, bc_actions = [], [], []
-    capacity = num_episodes * max_steps * (4 if augment else 1)
-    demo_buffer = ReplayBuffer(capacity=capacity,
-                               map_shape=input_spec[0], aux_dim=input_spec[1])
-
-    wins, total_eps = 0, 0
-    for ep in tqdm(range(num_episodes), desc="Collecting demos"):
-        obs = env.reset(seed=seed + ep)
-        map_state, aux_state = encode_obs(obs, agent_ids)
-        prev_obs = None
-
-        ep_transitions = []
-
-        for _ in range(max_steps):
-            actions = [None] * 4
-            expert_action = expert.act(obs)
-            actions[expert_id] = expert_action
-            for opp in opponents:
-                actions[opp.agent_id] = opp.act(obs)
-
-            next_obs, terminated, truncated = env.step(actions)
-            done = terminated or truncated
-
-            next_map_state, next_aux_state = encode_obs(next_obs, agent_ids)
-            r = compute_reward(prev_obs, next_obs, agent_id=0)
-
-            ep_transitions.append((
-                map_state, aux_state, expert_action, r,
-                next_map_state, next_aux_state, float(done),
-            ))
-
-            prev_obs = obs
-            obs = next_obs
-            map_state = next_map_state
-            aux_state = next_aux_state
-            if done:
-                break
-
-        total_eps += 1
-        alive_final = next_obs["players"][:, 2].astype(np.int8)
-        expert_alive = int(alive_final[expert_id]) == 1
-        opp_alive_any = any(int(alive_final[i]) == 1 for i in opp_ids)
-        expert_won = expert_alive and (not opp_alive_any)
-
-        if not expert_won:
-            continue
-        wins += 1
-
-        for ms, axs, act, rew, nms, naxs, d in ep_transitions:
-            demo_buffer.push(ms, axs, act, rew, nms, naxs, d)
-            bc_maps.append(ms)
-            bc_auxs.append(axs)
-            bc_actions.append(act)
-
-            if augment:
-                for aug_ms, aug_axs, aug_act in augment_transition(ms, axs, act):
-                    bc_maps.append(aug_ms)
-                    bc_auxs.append(aug_axs)
-                    bc_actions.append(aug_act)
-
-    print(f"Demo collection: {wins}/{total_eps} winning episodes, "
-          f"{len(bc_maps)} BC samples (augmented), "
-          f"{len(demo_buffer)} replay transitions")
-
-    bc_data = {
-        "map": np.array(bc_maps, dtype=np.float32),
-        "aux": np.array(bc_auxs, dtype=np.float32),
-        "action": np.array(bc_actions, dtype=np.int64),
-    }
-    return bc_data, demo_buffer, input_spec
-
-
-# ======================================================================
-# 3. Behavioral Cloning Pre-training
+# 1. Behavioral Cloning Pre-training
 # ======================================================================
 
 # STOP is common in expert data, BOMB is rare but critical
@@ -501,7 +242,7 @@ def pretrain_bc(q_net, bc_data, device, bc_epochs=15, batch_size=128,
 
 
 # ======================================================================
-# 4. DQfD Agent (TD loss + large-margin supervised loss)
+# 2. DQfD Agent (TD loss + large-margin supervised loss)
 # ======================================================================
 
 class DQfDAgent:
@@ -618,7 +359,7 @@ class DQfDAgent:
 
 
 # ======================================================================
-# 5. Main training loop
+# 3. Main training loop
 # ======================================================================
 
 def train_dqfd(
@@ -634,6 +375,7 @@ def train_dqfd(
     lambda_bc_init=1.0,
     lambda_bc_final=0.1,
     margin=0.8,
+    batch_size=64,
     save_model=True,
     pretrained_model=None,
 ):
@@ -647,6 +389,8 @@ def train_dqfd(
         max_steps=max_steps,
         seed=seed,
         augment=True,
+        store_dqfd_buffer=True,
+        reward_fn=compute_reward,
     )
 
     if len(demo_buffer) == 0:
@@ -699,12 +443,13 @@ def train_dqfd(
 
     agent_ids = [user_id, *[e.agent_id for e in enemy_agents]]
 
-    epsilon_start = 0.3
+    # After BC, the policy is already reasonable; high ε floods the replay buffer with junk
+    # and fights the demo margin loss — keep exploration moderate.
+    epsilon_start = 0.15
     epsilon_min = 0.05
-    epsilon_decay = 0.995
+    epsilon_decay = 0.997
     epsilon = epsilon_start
-    batch_size = 64
-    half_batch = batch_size // 2
+    half_batch = max(1, batch_size // 2)
 
     env_buffer = ReplayBuffer(capacity=20_000, map_shape=input_spec[0],
                               aux_dim=input_spec[1])
@@ -768,7 +513,7 @@ def train_dqfd(
 
             ep_reward_history.append(total_reward)
             epsilon = max(epsilon_min, epsilon * epsilon_decay)
-            if ep % 10 == 0:
+            if ep % 5 == 0:
                 agent.update_target_network()
             pbar.update(1)
             pbar.set_postfix(
@@ -802,10 +547,12 @@ def train_dqfd(
 
 
 # ======================================================================
-# 6. CLI
+# 4. CLI
 # ======================================================================
 
 if __name__ == "__main__":
+    os.environ.setdefault("CUDA_VISIBLE_DEVICES", "1")
+
     parser = argparse.ArgumentParser(
         description="Imitation Learning: BC Pre-training + DQfD Fine-tuning")
     parser.add_argument("--seed", type=int, default=86,
@@ -852,6 +599,7 @@ if __name__ == "__main__":
         lambda_bc_init=args.lambda_bc,
         margin=args.margin,
         num_players=args.num_players,
+        batch_size=args.batch_size,
         save_model=args.save_model,
         pretrained_model=args.load_model,
     )

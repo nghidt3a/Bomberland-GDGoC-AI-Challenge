@@ -142,30 +142,37 @@ def _manhattan_to_nearest_alive_enemy(players, agent_id, x, y):
 
 
 def _in_own_predicted_blast(obs, agent_id, x, y):
+    return _min_own_blast_timer_at(obs, agent_id, x, y) is not None
+
+
+def _min_own_blast_timer_at(obs, agent_id, x, y):
+    """Smallest tick countdown among this agent's bombs whose blast includes (x, y)."""
     bombs = obs["bombs"]
     if bombs is None:
-        return False
+        return None
     arr = np.asarray(bombs)
     if arr.size == 0:
-        return False
+        return None
     if arr.ndim == 1:
         arr = arr.reshape(1, -1)
     players = obs["players"]
     grid = obs["map"]
     ix, iy = int(x), int(y)
     aid = int(agent_id)
+    best = None
     for i in range(arr.shape[0]):
         parsed = _parse_bomb_row(arr[i])
         if parsed is None:
             continue
-        bx, by, _timer, owner_id = parsed
+        bx, by, timer, owner_id = parsed
         if int(owner_id) != aid:
             continue
         radius = _bomb_radius_from_obs(players, owner_id)
         tiles = _explosion_tiles_for_bomb(grid, bx, by, radius)
         if (ix, iy) in tiles:
-            return True
-    return False
+            t = int(timer)
+            best = t if best is None else min(best, t)
+    return best
 
 
 def compute_reward(prev_obs, curr_obs, agent_id):
@@ -218,8 +225,11 @@ def compute_reward(prev_obs, curr_obs, agent_id):
             # Only when stepping into blast; standing still (e.g. planting on own tile) is excluded
             reward += REWARD_DICT["danger_enter"]
 
-    if curr_alive == 1 and _in_own_predicted_blast(curr_obs, agent_id, curr_x, curr_y):
-        reward += REWARD_DICT["own_blast_loiter"]
+    # Standing in your own blast: penalize more as the fuse runs down (clearer than flat -0.04).
+    mt_own = _min_own_blast_timer_at(curr_obs, agent_id, curr_x, curr_y)
+    if curr_alive == 1 and mt_own is not None:
+        urgency = max(1, 8 - int(mt_own))
+        reward += REWARD_DICT["own_blast_loiter"] * float(urgency)
 
     if (
         curr_alive == 1

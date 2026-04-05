@@ -17,6 +17,7 @@ if str(parent_dir) not in sys.path:
 from engine import BomberEnv
 from agent import RandomAgent, SimpleRuleAgent, SmarterRuleAgent, TacticalRuleAgent, GeniusRuleAgent, BoxFarmerAgent
 from training import encode_obs, DQNAgent, DQfDAgent
+from training.SQIL import encode_obs as sqil_encode_obs
 
 class Viewer:
 	def __init__(self, width=13, height=13, cell_size=42, fps=8):
@@ -278,10 +279,33 @@ def unorient_action_from_topleft(action, agent_id):
 	return action
 
 
+def _expected_input_spec(agent):
+	"""Return (map_channels, aux_dim) if available, else (None, None)."""
+	map_shape = getattr(agent, "map_shape", None)
+	aux_dim = getattr(agent, "aux_dim", None)
+	if map_shape is None or aux_dim is None:
+		return None, None
+	return int(map_shape[0]), int(aux_dim)
+
+
+def _encode_for_model_agent(obs, agent_id, all_agent_ids, agent):
+	"""Encode obs using a feature format compatible with the loaded model."""
+	map_channels, aux_dim = _expected_input_spec(agent)
+
+	# SQIL checkpoints in this repo use 11 map channels + 5 aux scalars.
+	if map_channels == 11 and aux_dim == 5:
+		return sqil_encode_obs(obs, agent_ids=[agent_id, *all_agent_ids])
+
+	# Fallback to legacy DQN encoding (9 channels + 3 aux).
+	opp_id = all_agent_ids[0] if all_agent_ids else (1 - agent_id)
+	return encode_obs(obs, agent_ids=[agent_id, opp_id])
+
+
 def simulate_episodes(model_paths, num_episodes=10, max_steps=500, seed=None):
 	env = BomberEnv(max_steps=max_steps)
 	agents, names = make_agents(model_paths, seed=seed)
 	episodes = []
+	num_agents = len(agents)
 
 	for episode in range(num_episodes):
 		episode_seed = None if seed is None else seed + episode
@@ -294,9 +318,8 @@ def simulate_episodes(model_paths, num_episodes=10, max_steps=500, seed=None):
 			actions = []
 			for i in range(len(agents)):
 				if isinstance(agents[i], (DQNAgent, DQfDAgent)):
-					# Prefer 2-player symmetry; fall back to "next player" when >2.
-					opp_id = (1 - i) if len(agents) == 2 else ((i + 1) % len(agents))
-					encoded = encode_obs(obs, agent_ids=[i, opp_id])
+					opp_ids = [pid for pid in range(num_agents) if pid != i]
+					encoded = _encode_for_model_agent(obs, i, opp_ids, agents[i])
 					if isinstance(encoded, tuple) and len(encoded) == 2:
 						map_feat, aux_feat = encoded
 					else:
