@@ -524,9 +524,12 @@ def run_background_cycle(
     success = 0
     
     student_candidates = [c for c in candidates if not c.get("is_baseline")]
-    
+
+    if not student_candidates:
+        return {"status": "skipped", "message": "No student agents in active pool. All-baseline matches are skipped."}
+
     for i in range(n_matches):
-        if student_candidates and len(candidates) >= 4:
+        if len(candidates) >= 4:
             # Force at least one student agent to avoid useless all-baseline matches
             student = rng.choice(student_candidates)
             remaining = [c for c in candidates if c["submission_id"] != student["submission_id"]]
@@ -534,6 +537,7 @@ def run_background_cycle(
             rng.shuffle(lineup) # randomize player positions
         else:
             lineup = rng.sample(candidates, 4)
+
         agent_paths = [item["agent_path"] for item in lineup]
         submission_ids = [item["submission_id"] for item in lineup]
         match_seed = rng.randint(0, 1000000) if seed is None else seed + i
