@@ -12,7 +12,7 @@ from competition.ingestion import get_drive_service, load_submission_metadata, p
 from competition.storage import SubmissionStore
 
 # Configuration
-ROOT_DIR = Path(__file__).resolve().parent.parent
+ROOT_DIR = Path(__file__).resolve().parent.parent.parent
 
 from competition.config import load_env
 load_env()

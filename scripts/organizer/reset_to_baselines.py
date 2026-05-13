@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 
-ROOT_DIR = Path(__file__).resolve().parent.parent
+ROOT_DIR = Path(__file__).resolve().parent.parent.parent
 
 from competition.config import load_env
 load_env()

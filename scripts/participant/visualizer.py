@@ -20,6 +20,7 @@ from training import encode_obs, DQNAgent, DQfDAgent
 from training.SQIL import encode_obs as sqil_encode_obs
 from training.bc_ppo_lstm import BC_PPO_LSTM_Agent, is_bc_ppo_lstm_checkpoint
 from training.bc_ppo_lstm_attn_selfplay import ActorCriticAttnLSTM
+from competition.evaluation.runtime_guard import load_agent_instance
 
 class Viewer:
 	PLAYER_COLORS = [(220, 50, 50), (50, 50, 220), (30, 150, 30), (200, 140, 0)]
@@ -301,36 +302,18 @@ class BC_PPO_AttnSelfplay_Agent:
 		return int(logits.argmax(dim=-1).item())
 
 
-def make_agents(model_paths, seed=None):
-	agents = [None] * len(model_paths)
-	names = [None] * len(model_paths)
+def make_agents(agent_paths, seed=None):
+	n_players = len(agent_paths)
+	agents = [None] * n_players
+	names = [None] * n_players
 
 	if seed is not None:
 		random.seed(seed)
 
-	dev = "cuda" if torch.cuda.is_available() else "cpu"
-	for i, path in enumerate(model_paths):
-		if path != "None":
-			checkpoint = torch.load(path, map_location="cpu")
-			# IMPORTANT: check new checkpoint type first because old bc_ppo_lstm
-			# heuristic can match on meta keys (input_spec/lstm_hidden) and mis-detect.
-			if is_bc_ppo_attn_selfplay_checkpoint(checkpoint):
-				agents[i] = BC_PPO_AttnSelfplay_Agent(i, path, device=dev)
-				names[i] = os.path.basename(path)
-			elif is_bc_ppo_lstm_checkpoint(checkpoint):
-				agents[i] = BC_PPO_LSTM_Agent(i, path, device=dev)
-				names[i] = os.path.basename(path)
-			else:
-				input_dim = checkpoint.get("input_dim", checkpoint.get("input_shape"))
-				num_actions = checkpoint["num_actions"]
-				agents[i] = DQfDAgent(
-					i, input_dim, num_actions, lr=1e-3, device=dev, pretrained_model=path
-				)
-				agents[i].load_agent(pretrained_model=path)
-				names[i] = os.path.basename(path)
-		else:
-			# x = random.randint(0, 6)
-			x = 5 if i == 0 else 3 if i == 1 else 2 if i == 2 else 4
+	for i, path in enumerate(agent_paths):
+		if path == "None" or path.lower() == "random":
+			# Random rule-based baseline
+			x = random.randint(0, 5)
 			if x == 0:
 				names[i] = "RandomAgent"
 				agents[i] = RandomAgent(i)
@@ -349,6 +332,40 @@ def make_agents(model_paths, seed=None):
 			else:
 				names[i] = "TacticalRuleAgent"
 				agents[i] = TacticalRuleAgent(i)
+		elif path == "RandomAgent":
+			names[i] = "RandomAgent"
+			agents[i] = RandomAgent(i)
+		elif path == "SimpleRuleAgent":
+			names[i] = "SimpleRuleAgent"
+			agents[i] = SimpleRuleAgent(i)
+		elif path == "SmarterRuleAgent":
+			names[i] = "SmarterRuleAgent"
+			agents[i] = SmarterRuleAgent(i)
+		elif path == "GeniusRuleAgent":
+			names[i] = "GeniusRuleAgent"
+			agents[i] = GeniusRuleAgent(i)
+		elif path == "BoxFarmerAgent":
+			names[i] = "BoxFarmerAgent"
+			agents[i] = BoxFarmerAgent(i)
+		elif path == "TacticalRuleAgent":
+			names[i] = "TacticalRuleAgent"
+			agents[i] = TacticalRuleAgent(i)
+		else:
+			# Custom agent path
+			p = Path(path)
+			if p.is_dir():
+				p = p / "agent.py"
+			if not p.exists():
+				raise FileNotFoundError(f"Agent file not found: {p}")
+			
+			try:
+				agents[i] = load_agent_instance(str(p), i)
+				if hasattr(agents[i], "team_id"):
+					names[i] = agents[i].team_id
+				else:
+					names[i] = p.parent.name if p.parent.name else p.name
+			except Exception as e:
+				raise RuntimeError(f"Failed to load agent from {p}: {e}")
 
 	return agents, names
 
@@ -430,51 +447,30 @@ def _encode_for_model_agent(obs, agent_id, all_agent_ids, agent):
 	return encode_obs(obs, agent_ids=[agent_id, opp_id])
 
 
-def simulate_episodes(model_paths, num_episodes=10, max_steps=500, seed=None, model_variants=None):
+def simulate_episodes(agent_paths, num_episodes=10, max_steps=500, seed=None, model_variants=None):
 	env = BomberEnv(max_steps=max_steps)
-	agents, names = make_agents(model_paths, seed=seed)
-	# Optional: override variant for new model agents
-	if model_variants:
-		for i, mv in enumerate(model_variants):
-			if not mv or mv == "auto":
-				continue
-			if isinstance(agents[i], BC_PPO_AttnSelfplay_Agent):
-				# reload with forced variant
-				agents[i] = BC_PPO_AttnSelfplay_Agent(i, model_paths[i], device=("cuda" if torch.cuda.is_available() else "cpu"), force_variant=mv)
-				names[i] = f"{names[i]}[{mv}]"
+	agents, names = make_agents(agent_paths, seed=seed)
+	
 	episodes = []
 	num_agents = len(agents)
 
 	for episode in range(num_episodes):
 		episode_seed = None if seed is None else seed + episode
 		obs = env.reset(seed=episode_seed)
-		for ag in agents:
-			if ag is not None and hasattr(ag, "reset_memory"):
-				ag.reset_memory()
 		done = False
 		step = 0
 		trajectory = [clone_obs(obs)]
 
 		while not done and step < max_steps:
 			actions = []
-			for i in range(len(agents)):
-				if isinstance(agents[i], (DQNAgent, DQfDAgent, BC_PPO_LSTM_Agent, BC_PPO_AttnSelfplay_Agent)):
-					opp_ids = [pid for pid in range(num_agents) if pid != i]
-					encoded = _encode_for_model_agent(obs, i, opp_ids, agents[i])
-					if isinstance(encoded, tuple) and len(encoded) == 2:
-						map_feat, aux_feat = encoded
-					else:
-						raise ValueError(
-							"encode_obs must return (map_feat, aux_feat) for model-based agents"
-						)
-
-					# Orient each agent's perspective so the acting agent is at top-left.
-					map_feat = orient_map_to_topleft(map_feat, i)
-					action = agents[i].act(map_feat, aux_feat, epsilon=0.05)
-					action = unorient_action_from_topleft(action, i)
-					actions.append(action)
-				else:
-					actions.append(agents[i].act(obs))
+			for i in range(num_agents):
+				try:
+					action = agents[i].act(obs)
+				except Exception as e:
+					print(f"Agent {names[i]} failed to act: {e}")
+					action = 0
+				actions.append(action)
+				
 			obs, terminated, truncated = env.step(actions)
 			trajectory.append(clone_obs(obs))
 			done = terminated or truncated
@@ -485,9 +481,9 @@ def simulate_episodes(model_paths, num_episodes=10, max_steps=500, seed=None, mo
 	return episodes, names
 
 
-def run_simple_viewer(model_paths, num_episodes=10, max_steps=100, seed=None, autoplay=True, model_variants=None):
+def run_simple_viewer(agent_paths, num_episodes=10, max_steps=100, seed=None, autoplay=True, model_variants=None):
 	episodes, agent_names = simulate_episodes(
-		model_paths=model_paths,
+		agent_paths=agent_paths,
 		num_episodes=num_episodes,
 		max_steps=max_steps,
 		seed=seed,
@@ -557,17 +553,9 @@ def run_simple_viewer(model_paths, num_episodes=10, max_steps=100, seed=None, au
 
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser(
-		description="Local viewer. model_paths: DQfD/SQIL .pth, BC+PPO+LSTM ckpts, or BC+PPO+Attn(+LSTM) ckpts."
+		description="Local viewer for agents."
 	)
-	parser.add_argument("--model_paths", nargs="+", default=["None", "None", "None", "None"])
-	parser.add_argument(
-		"--model_variants",
-		nargs="+",
-		default=None,
-		choices=["auto", "lstm", "attn", "attn_lstm"],
-		help="Optional per-player override for BC+PPO+Attn checkpoints (same length as --model_paths). "
-			 "Use 'auto' to read from checkpoint meta.",
-	)
+	parser.add_argument("--agent_paths", nargs="+", default=["None", "None", "None", "None"])
 	parser.add_argument("--num_episodes", type=int, default=10)
 	parser.add_argument("--max_steps", type=int, default=500)
 	parser.add_argument("--seed", type=int, default=None)
@@ -575,10 +563,9 @@ if __name__ == "__main__":
 	args = parser.parse_args()
 
 	run_simple_viewer(
-		model_paths=args.model_paths,
+		agent_paths=args.agent_paths,
 		num_episodes=args.num_episodes,
 		max_steps=args.max_steps,
 		seed=args.seed,
 		autoplay=args.autoplay,
-		model_variants=args.model_variants,
 	)

@@ -3,17 +3,15 @@ import random
 import argparse
 import sys
 from pathlib import Path
+
 parent_dir = Path(__file__).resolve().parent.parent
 # Add parent directory to sys.path if not already present
 if str(parent_dir) not in sys.path:
     sys.path.insert(0, str(parent_dir))
 
-
-import torch
-
 from engine.game import BomberEnv
 from agent import RandomAgent, SimpleRuleAgent, SmarterRuleAgent, GeniusRuleAgent, BoxFarmerAgent, TacticalRuleAgent
-from training.DQN import DQNAgent, encode_obs
+from competition.evaluation.runtime_guard import load_agent_instance
 
 
 def str2bool(value):
@@ -26,64 +24,101 @@ def str2bool(value):
         return False
     raise argparse.ArgumentTypeError(f"Invalid boolean value: {value}")
 
-def run_match(model_paths, num_episodes=10, max_steps=500, seed=None):
-    env = BomberEnv(max_steps=max_steps, seed=seed)
-    n_players = len(model_paths)
+
+def make_agents(agent_paths, seed=None):
+    n_players = len(agent_paths)
     agents = [None] * n_players
-    info = [{"name": None, "wins": 0} for _ in range(n_players)]
-    
+    names = [None] * n_players
+
     if seed is not None:
         random.seed(seed)
-    
-    for i, path in enumerate(model_paths):
-        if path != "None":
-            # suppose submission file is /agent/team_name/agent.py -> extract team_name as agent name
-            checkpoint = torch.load(path, map_location="cpu")
-            input_dim = checkpoint["input_dim"]
-            num_actions = checkpoint["num_actions"]
-            agents[i] = DQNAgent(i, input_dim, num_actions, lr=1e-3, device="cuda" if torch.cuda.is_available() else "cpu", pretrained_model=path)
-            agents[i].load_agent(pretrained_model=path)
-            info[i]["name"] = os.path.basename(path)
-        else:
-            # Random rule-based agent for headless testing
-            x = random.randint(0, 6)
+
+    for i, path in enumerate(agent_paths):
+        if path == "None" or path.lower() == "random":
+            # Random rule-based baseline
+            x = random.randint(0, 5)
             if x == 0:
-                info[i]["name"] = "RandomAgent"
+                names[i] = "RandomAgent"
                 agents[i] = RandomAgent(i)
             elif x == 1:
-                info[i]["name"] = "SimpleRuleAgent"
+                names[i] = "SimpleRuleAgent"
                 agents[i] = SimpleRuleAgent(i)
             elif x == 2:
-                info[i]["name"] = "SmarterRuleAgent"
+                names[i] = "SmarterRuleAgent"
                 agents[i] = SmarterRuleAgent(i)
             elif x == 3:
-                info[i]["name"] = "GeniusRuleAgent"
+                names[i] = "GeniusRuleAgent"
                 agents[i] = GeniusRuleAgent(i)
             elif x == 4:
-                info[i]["name"] = "BoxFarmerAgent"
+                names[i] = "BoxFarmerAgent"
                 agents[i] = BoxFarmerAgent(i)
             else:
-                info[i]["name"] = "TacticalRuleAgent"
+                names[i] = "TacticalRuleAgent"
                 agents[i] = TacticalRuleAgent(i)
+        elif path == "RandomAgent":
+            names[i] = "RandomAgent"
+            agents[i] = RandomAgent(i)
+        elif path == "SimpleRuleAgent":
+            names[i] = "SimpleRuleAgent"
+            agents[i] = SimpleRuleAgent(i)
+        elif path == "SmarterRuleAgent":
+            names[i] = "SmarterRuleAgent"
+            agents[i] = SmarterRuleAgent(i)
+        elif path == "GeniusRuleAgent":
+            names[i] = "GeniusRuleAgent"
+            agents[i] = GeniusRuleAgent(i)
+        elif path == "BoxFarmerAgent":
+            names[i] = "BoxFarmerAgent"
+            agents[i] = BoxFarmerAgent(i)
+        elif path == "TacticalRuleAgent":
+            names[i] = "TacticalRuleAgent"
+            agents[i] = TacticalRuleAgent(i)
+        else:
+            # Custom agent path
+            p = Path(path)
+            if p.is_dir():
+                p = p / "agent.py"
+            if not p.exists():
+                raise FileNotFoundError(f"Agent file not found: {p}")
+            
+            try:
+                agents[i] = load_agent_instance(str(p), i)
+                # If agent has a team_id class attribute, use it, otherwise use folder name
+                if hasattr(agents[i], "team_id"):
+                    names[i] = agents[i].team_id
+                else:
+                    names[i] = p.parent.name if p.parent.name else p.name
+            except Exception as e:
+                raise RuntimeError(f"Failed to load agent from {p}: {e}")
+
+    return agents, names
+
+
+def run_match(agent_paths, num_episodes=10, max_steps=500, seed=None):
+    env = BomberEnv(max_steps=max_steps, seed=seed)
+    n_players = len(agent_paths)
+    
+    agents, names = make_agents(agent_paths, seed)
+    info = [{"name": names[i], "wins": 0} for i in range(n_players)]
 
     for episode in range(num_episodes):
         episode_seed = None if seed is None else seed + episode
         obs = env.reset(seed=episode_seed)
-        encoded_obs = encode_obs(obs, agent_ids=[i for i in range(n_players)])
         done = False
         step = 0
         death_order = []
         prev_alive = [bool(p[2]) for p in obs["players"]]
 
         while not done and step < max_steps:
-            encoded_obs = encode_obs(obs, agent_ids=[i for i in range(n_players)])
-            # actions = [agent.act(obs) for agent in agents]
             actions = []
             for i in range(n_players):
-                if isinstance(agents[i], DQNAgent):
-                    actions.append(agents[i].act(encoded_obs, epsilon=0.05))
-                else:
-                    actions.append(agents[i].act(obs))
+                try:
+                    action = agents[i].act(obs)
+                except Exception as e:
+                    print(f"Agent {names[i]} failed to act: {e}")
+                    action = 0
+                actions.append(action)
+                
             obs, terminated, truncated = env.step(actions)
             done = terminated or truncated
             step += 1
@@ -111,7 +146,8 @@ def run_match(model_paths, num_episodes=10, max_steps=500, seed=None):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model_paths", nargs="+", default=["None", "None", "None", "None"])
+    parser.add_argument("--agent_paths", nargs="+", default=["None", "None", "None", "None"],
+                        help="Paths to agent.py files, agent folders, or baseline names (e.g. RandomAgent). Use 'None' for a random baseline.")
     parser.add_argument("--num_episodes", type=int, default=10)
     parser.add_argument("--max_steps", type=int, default=500)
     parser.add_argument("--seed", type=int, default=None)
@@ -119,21 +155,20 @@ if __name__ == "__main__":
     parser.add_argument("--autoplay", type=str2bool, default=True)
     args = parser.parse_args()
     
-    run_match(
-        model_paths=args.model_paths,
-        num_episodes=args.num_episodes,
-        max_steps=args.max_steps,
-        seed=args.seed
-    )
-
     if args.visualize:
-        # Lazy import so non-visual usage does not require pygame.
-        from visualizer.run_local_evaluation import run_simple_viewer
+        from scripts.participant.visualizer import run_simple_viewer
 
         run_simple_viewer(
-            model_paths=args.model_paths,
+            agent_paths=args.agent_paths,
             num_episodes=args.num_episodes,
             max_steps=args.max_steps,
             seed=args.seed,
             autoplay=args.autoplay,
+        )
+    else:
+        run_match(
+            agent_paths=args.agent_paths,
+            num_episodes=args.num_episodes,
+            max_steps=args.max_steps,
+            seed=args.seed
         )

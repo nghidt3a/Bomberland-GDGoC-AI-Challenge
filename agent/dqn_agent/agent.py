@@ -129,7 +129,7 @@ def encode_obs(obs, agent_id):
     return map_feat, scalar
 
 class Agent:
-    """DQN Agent for submission."""
+    """DQN Agent for submission."""    
     def __init__(self, agent_id: int):
         self.agent_id = agent_id
         self.device = torch.device("cpu")  # Use CPU for compatibility

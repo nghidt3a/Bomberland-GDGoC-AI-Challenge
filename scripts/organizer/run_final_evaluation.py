@@ -9,10 +9,16 @@ import itertools
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from datetime import datetime
 
+from pathlib import Path
+
+ROOT_DIR = Path(__file__).resolve().parent.parent.parent
+
 from competition.config import load_env
 load_env()
 
 from competition.evaluation.match_runner import MatchRunner
+
+DEFAULT_DB_PATH = str(ROOT_DIR / "competition.db")
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
@@ -279,8 +285,13 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run the isolated Grand Finals tournament.")
     parser.add_argument("--matches_per_combo", type=int, default=50, help="Number of matches to run for each 4-player combination")
     parser.add_argument("--workers", type=int, default=4, help="Number of parallel workers")
-    parser.add_argument("--db_path", type=str, default="competition.db", help="Path to DB")
+    parser.add_argument("--db_path", type=str, default=DEFAULT_DB_PATH, help="Path to DB")
     parser.add_argument("--enable_gif", action="store_true", help="Generate GIFs for finals matches")
+    if hasattr(os, "geteuid") and os.geteuid() != 0:
+        print("ERROR: For security, evaluation must be run with sudo to enable sandboxing.")
+        import sys
+        sys.exit(1)
+        
     args = parser.parse_args()
     
     run_final_evaluation(args.db_path, args.matches_per_combo, args.workers, args.enable_gif)

@@ -16,7 +16,7 @@ from competition.evaluation.ranking import RankingSystem
 from competition.evaluation.runtime_guard import runtime_precheck
 
 
-ROOT_DIR = Path(__file__).resolve().parent.parent
+ROOT_DIR = Path(__file__).resolve().parent.parent.parent
 
 from competition.config import load_env
 load_env()
@@ -672,7 +672,7 @@ if __name__ == "__main__":
     parser.add_argument("--log_dir", default=DEFAULT_LOG_DIR)
     parser.add_argument("--seed", type=int, default=None)
     parser.add_argument("--inference_timeout_ms", type=int, default=100)
-    parser.add_argument("--startup_timeout_ms", type=int, default=int(float(os.getenv("EVALUATION_STARTUP_TIMEOUT_S", "15")) * 1000))
+    parser.add_argument("--startup_timeout_ms", type=int, default=int(float(os.getenv("EVALUATION_STARTUP_TIMEOUT_S", "20")) * 1000))
     parser.add_argument("--update_sheet", action="store_true")
     parser.add_argument("--sheet_credentials_file", default=None)
     parser.add_argument("--sheet_spreadsheet_id", default=None)
@@ -689,11 +689,16 @@ if __name__ == "__main__":
     batch_cmd.add_argument("--max_steps", type=int, default=DEFAULT_MAX_STEPS)
 
     bg_cmd = sub.add_parser("background")
-    bg_cmd.add_argument("--matches", type=int, default=100)
+    bg_cmd.add_argument("--matches", type=int, default=5)
     bg_cmd.add_argument("--max_steps", type=int, default=DEFAULT_MAX_STEPS)
 
     lb_cmd = sub.add_parser("leaderboard")
     lb_cmd.add_argument("--limit", type=int, default=20)
+
+    if hasattr(os, "geteuid") and os.geteuid() != 0:
+        print("ERROR: For security, evaluation must be run with sudo to enable sandboxing.")
+        import sys
+        sys.exit(1)
 
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -720,7 +725,7 @@ if __name__ == "__main__":
     elif args.command == "background":
         # Allow environment variables to override or provide defaults for the background worker
         update_sheet = args.update_sheet or os.getenv("EVALUATION_UPDATE_SHEET", "false").lower() == "true"
-        matches = args.matches if args.matches != 100 else int(os.getenv("BACKGROUND_EVAL_MATCHES", "100"))
+        matches = args.matches if args.matches != 5 else int(os.getenv("BACKGROUND_EVAL_MATCHES", "5"))
         parallel_workers = args.parallel_workers if args.parallel_workers != 1 else int(os.getenv("EVALUATION_PARALLEL_WORKERS", "1"))
         
         # Enable GIF/Timing by default unless explicitly disabled by flag OR by env var

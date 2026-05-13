@@ -9,7 +9,7 @@ parent_dir = Path(__file__).resolve().parent.parent
 if str(parent_dir) not in sys.path:
     sys.path.insert(0, str(parent_dir))
 
-from visualizer.bomberland_rendering import render_match_frame
+from competition.evaluation.rendering import render_match_frame
 
 pygame = importlib.import_module("pygame")
 
