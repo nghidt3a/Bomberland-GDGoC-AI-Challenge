@@ -84,6 +84,13 @@ def _agent_worker(agent_path: str, agent_id: int, recv_conn, send_conn):
             send_conn.send({"ok": False, "error": f"sandbox_failed:{exc}"})
             return
 
+    # Force single-threaded execution to prevent thread-thrashing & CPU saturation DoS attacks
+    os.environ["OMP_NUM_THREADS"] = "1"
+    os.environ["MKL_NUM_THREADS"] = "1"
+    os.environ["OPENBLAS_NUM_THREADS"] = "1"
+    os.environ["VECLIB_MAXIMUM_THREADS"] = "1"
+    os.environ["NUMEXPR_NUM_THREADS"] = "1"
+
     try:
         agent = load_agent_instance(agent_path=agent_path, agent_id=agent_id)
     except Exception as exc:
