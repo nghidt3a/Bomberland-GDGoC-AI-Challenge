@@ -14,14 +14,13 @@ Your agent must be a Python class named `Agent` inside a file named `agent.py`. 
 
 ```python
 class Agent:
-    def __init__(self):
-        # Initialize your model or state here
-        pass
+    def __init__(self, agent_id: int):
+        self.agent_id = agent_id
 
-    def act(self, observation):
-        # observation contains the game state
-        # return an action (0-5)
-        return 0 
+    def act(self, obs: dict) -> int:
+        # obs: dict containing 'map', 'players', 'bombs'
+        # Returns: int in [0, 5]
+        ...
 ```
 
 ### Constraints
