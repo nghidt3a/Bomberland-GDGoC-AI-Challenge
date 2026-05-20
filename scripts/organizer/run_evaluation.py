@@ -4,6 +4,7 @@ import logging
 import os
 import random
 import time
+import fcntl
 from pathlib import Path
 from typing import Optional
 
@@ -23,7 +24,7 @@ load_env()
 
 DEFAULT_DB_PATH = str(ROOT_DIR / "competition.db")
 DEFAULT_LOG_DIR = str(ROOT_DIR / "logs")
-EVALUATION_LOCK_DIR = ROOT_DIR / ".evaluation_locks"
+EVALUATION_LOCK_FILE = ROOT_DIR / ".evaluation.lock"
 
 DEFAULT_N_MATCHES = 25
 DEFAULT_MAX_STEPS = 500
@@ -262,27 +263,22 @@ def run_submission_batch(
     enable_gif: bool = True,
     enable_timing_logs: bool = True,
 ):
-    # Create a per-submission lock file in the shared lock directory
-    lock_file = EVALUATION_LOCK_DIR / submission_id
+    lock_fd = None
     try:
-        EVALUATION_LOCK_DIR.mkdir(exist_ok=True)
-        lock_file.touch(exist_ok=True)
+        lock_fd = open(EVALUATION_LOCK_FILE, "w")
+        fcntl.flock(lock_fd, fcntl.LOCK_EX)
     except Exception as e:
-        logger.warning("Could not create evaluation lock for %s: %s", submission_id, e)
+        logger.warning("Could not acquire lock: %s", e)
 
     def _cleanup_lock():
-        """Remove the submission batch lock file. Call before every return path."""
-        try:
-            _lock = EVALUATION_LOCK_DIR / submission_id
-            if _lock.exists():
-                _lock.unlink()
-            if EVALUATION_LOCK_DIR.exists() and not any(EVALUATION_LOCK_DIR.iterdir()):
-                try:
-                    EVALUATION_LOCK_DIR.rmdir()
-                except Exception:
-                    pass
-        except Exception as _e:
-            logger.warning("Could not remove evaluation lock for %s: %s", submission_id, _e)
+        nonlocal lock_fd
+        if lock_fd:
+            try:
+                fcntl.flock(lock_fd, fcntl.LOCK_UN)
+                lock_fd.close()
+                lock_fd = None
+            except Exception:
+                pass
 
     total_started = time.perf_counter()
     parallel_workers = max(1, int(parallel_workers))
@@ -553,9 +549,28 @@ def run_background_cycle(
     enable_gif: bool = True,
     enable_timing_logs: bool = True,
 ):
-    # Yield to ANY active submission batches
-    if EVALUATION_LOCK_DIR.exists() and any(EVALUATION_LOCK_DIR.iterdir()):
-        return {"status": "skipped", "message": "Yielding to active submission batches (lock directory not empty)."}
+    lock_fd = None
+    try:
+        lock_fd = open(EVALUATION_LOCK_FILE, "w")
+        fcntl.flock(lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except BlockingIOError:
+        if lock_fd:
+            lock_fd.close()
+        return {"status": "skipped", "message": "Yielding to active evaluation (lock is busy)."}
+    except Exception as e:
+        if lock_fd:
+            lock_fd.close()
+        return {"status": "skipped", "message": f"Could not acquire lock: {e}"}
+
+    def _cleanup_lock():
+        nonlocal lock_fd
+        if lock_fd:
+            try:
+                fcntl.flock(lock_fd, fcntl.LOCK_UN)
+                lock_fd.close()
+                lock_fd = None
+            except Exception:
+                pass
 
     total_started = time.perf_counter()
     parallel_workers = max(1, int(parallel_workers))
@@ -703,6 +718,7 @@ def run_background_cycle(
     }
     _log_timing(enable_timing_logs, f"total run_background_cycle: {result['timings']['total_s']:.3f}s")
 
+    _cleanup_lock()
     return result
 
 

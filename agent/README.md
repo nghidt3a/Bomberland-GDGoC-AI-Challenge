@@ -93,4 +93,4 @@ python -m scripts.participant.replay_viewer path/to/log.json
     *   `agent.py` (Required)
     *   Any weights or models (e.g., `.pth` files)
 2.  **Submit**: Use the Official Submission Form with your **Team ID** and **Token**.
-3.  **Feedback**: Once submitted, your agent will immediately play 25 matches. You can check the leaderboard for your updated rating.
+3.  **Feedback**: Once submitted, your agent will immediately play 12 matches. You can check the leaderboard for your updated rating.

@@ -278,7 +278,7 @@ Ranking priority (tie-break):
 **Immediately upon submission:**
 1. Server downloads ZIP from Google Drive.
 2. Structure and syntax check.
-3. If valid → immediately trigger **a batch of 25 matches** for initial rating. Opponents are sampled from the Active Pool (Ratio: 40% similar rating, 30% top tier, 30% random).
+3. If valid → immediately trigger **a batch of 12 matches** for initial rating. Opponents are sampled from the Active Pool (Ratio: 40% similar rating, 30% top tier, 30% random).
 4. Update Google Sheets leaderboard.
 
 **Background Job (Continuous):**
