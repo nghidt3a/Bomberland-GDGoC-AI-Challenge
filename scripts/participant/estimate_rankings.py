@@ -1,4 +1,11 @@
 import os
+# Force single-threaded execution to simulate production VM constraints
+os.environ["OMP_NUM_THREADS"] = "1"
+os.environ["OPENBLAS_NUM_THREADS"] = "1"
+os.environ["MKL_NUM_THREADS"] = "1"
+os.environ["VECLIB_MAXIMUM_THREADS"] = "1"
+os.environ["NUMEXPR_NUM_THREADS"] = "1"
+
 import argparse
 import random
 import sys
@@ -30,8 +37,10 @@ def estimate_rankings(agent_path, num_matches=100, max_steps=500):
     env = BomberEnv(max_steps=max_steps)
 
     for i in range(num_matches):
-        # Player 0 is the agent, Player 1-3 are random baselines
-        agent_paths = [agent_path, "Random", "Random", "Random"]
+        # Player 0 is the agent, Player 1-3 are sampled with repetition from strong baselines
+        strong_baselines = ["TacticalRuleAgent", "SmarterRuleAgent", "GeniusRuleAgent"]
+        opponents = random.choices(strong_baselines, k=3)
+        agent_paths = [agent_path] + opponents
         try:
             agents, names = make_agents(agent_paths, seed=None)
         except Exception as e:

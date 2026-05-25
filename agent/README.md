@@ -62,7 +62,7 @@ secret_value_0 = user_secrets.get_secret("dqn")
 Guidance for local testing before submitting your agent. All participant scripts are located in the `scripts/participant/` folder.
 
 ### 1. Evaluate Agent Performance
-To get a quick estimate of your agent's TrueSkill rating, run the ranking script. It will play matches against random baseline bots and compute your estimated win rate and leaderboard score.
+To get a quick estimate of your agent's TrueSkill rating, run the ranking script. It will play matches against random strong baseline bots (Tactical, Smarter, Genius) and compute your estimated win rate and leaderboard score.
 ```bash
 python -m scripts.participant.estimate_rankings --agent_path path/to/your/agent/ --num_matches 100
 ```
@@ -81,7 +81,15 @@ python -m scripts.participant.run_local_match --agent_paths path/to/your/agent/ 
     *   `None` or `Random`: Automatically loads a random baseline bot.
 *   `--visualize true`: Opens the PyGame window to watch the match live. Set to `false` for fast headless testing.
 
-### 3. Replay Saved Matches
+### 3. Estimate Agent Step Time
+Ensure your agent doesn't violate the 100ms per step limit by running a timing benchmark:
+```bash
+python -m scripts.participant.estimate_agent_time path/to/your/agent/ --opponents None None None --num_matches 10
+```
+
+**Note:** This script doesn't ensure passing the 100ms per step limit on VM due to hardware difference.
+
+### 4. Replay Saved Matches
 If you downloaded a match log (`.json`) from the Google Drive, you can replay it:
 ```bash
 python -m scripts.participant.replay_viewer path/to/log.json

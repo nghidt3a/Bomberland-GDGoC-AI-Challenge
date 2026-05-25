@@ -269,8 +269,8 @@ If agents have exactly identical statistics across all 4 metrics, they will shar
 
 **Win/Draw/Loss:**
 Determined by match ranking:
-- **Win:** Achieving the unique best rank in the match (e.g., last one alive, or sole survivor at time limit).
-- **Draw:** Sharing the best rank with other agents (e.g., multiple agents eliminated in the same final step, or multiple survivors at 500 steps).
+- **Win:** Achieving the unique best rank in the match.
+- **Draw:** Sharing the best rank with other agents.
 - **Loss:** Failing to achieve the best rank (eliminated before the winner).
 
 ### Leaderboard
