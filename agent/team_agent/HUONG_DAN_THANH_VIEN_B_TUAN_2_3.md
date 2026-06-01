@@ -38,12 +38,60 @@ Farm/item/kill co tang ma self-death khong tang khong?
 
 Lam theo thu tu nay:
 
-1. Phan tich ket qua submit thu `submit_rule_v1`.
-2. Benchmark `rule_v1` bang fixed seeds de lam baseline.
-3. Tune `rule_v2` trong source chinh `agent/team_agent/`.
-4. Giam bomb spam, tang useful bomb ratio.
-5. Cai thien step500 tie-break.
-6. Chi bat dau BC khi `rule_v2` da co metric tot hoac it nhat on dinh hon `rule_v1`.
+1. Dung analyzer report lam baseline rule_v1 khi so rule_v2.
+2. Sua anti-loop/anti-camping truoc khi tune farm sau.
+3. Giam diem STOP theo streak cuc bo, tru khi STOP la action safe duy nhat.
+4. Phat `PLACE_BOMB` neu sau bomb escape-space thap hoac de bi ep STOP.
+5. Tang progress target khi step > 350 de cai thien tie-break.
+6. Phan tich ket qua submit thu `submit_rule_v1`.
+7. Benchmark `rule_v1` bang fixed seeds de lam baseline.
+8. Tune `rule_v2` trong source chinh `agent/team_agent/`.
+9. Giam bomb spam, tang useful bomb ratio.
+10. Cai thien step500 tie-break.
+11. Chi bat dau BC khi `rule_v2` da co metric tot hoac it nhat on dinh hon `rule_v1`.
+
+## 2.1 Tình trạng mới từ data_logs submit_rule_v1
+
+Nguon bao cao:
+
+- `agent/team_agent/reports/data_logs/BAO_CAO_TONG_HOP_948d41ec.md`
+- `agent/team_agent/reports/data_logs/VAN_DE_PERSON_B_STRATEGY.md`
+- `agent/team_agent/reports/data_logs/TIMELINE_CAC_TRAN_QUAN_TRONG.md`
+
+Metric hien tai cua 12 tran log:
+
+```text
+average_rank = 2.00
+survived_to_step500 = 6/12
+died_before_step500 = 6/12
+early_death_before_step150 = 3/12
+stop_streak_ge_20 = 6/12
+own_bomb_escape_failure = 5 case
+enemy_bomb_trap = 1 case
+safety_replay_flag = 6 tran
+```
+
+Van de strategy noi bat:
+
+- STOP/camping qua dai:
+  - seed `548846`: max STOP `74`;
+  - seed `225587`: max STOP `115`;
+  - seed `609286`: max STOP `255`.
+- Lap A-B-A-B bi flag o `11/12` tran.
+- Song toi step 500 nhung tie-break yeu:
+  - seed `548846`;
+  - seed `126779`.
+- Dat bom qua it:
+  - seed `156663`;
+  - seed `225587`;
+  - seed `609286`.
+- Mot so death xay ra sau khi dat bom roi khong thoat du xa; B can giam score bomb neu sau do agent de bi ep STOP.
+
+Ket luan tam thoi:
+
+- Neu A dang sua safety, B van phai giam xac suat dua agent vao trap som.
+- Rule_v2 can uu tien anti-loop va progress truoc; neu chi tang farm/pressure se lam own-bomb death nang hon.
+- `data_logs` la baseline hanh vi that cua rule_v1, nhung khong thay the benchmark 50-100 tran.
 
 ## 3. Bat bien safety
 
@@ -185,6 +233,44 @@ survive_to_500_rate cao nhung step500_tiebreak_rank khong thap
 neu song toi 500 thi boxes/items/bombs phai co tien do
 ```
 
+### B8. Rule_v2 theo data_logs
+
+Muc tieu:
+
+- Sua nhung hanh vi da thay trong 12 log truoc khi mo rong sang BC/PPO.
+- Giu survival khong kem rule_v1, nhung giam camping va cai thien tie-break.
+
+Tasks:
+
+- Chong STOP streak:
+  - phat STOP theo streak cuc bo khi `recent_stop_count >= 3`;
+  - muc tieu max STOP streak < `20` tren 12 log hien tai;
+  - STOP chi duoc giu diem cao neu no la action safe duy nhat hoac dang doi fire het.
+- Chong ping-pong:
+  - phat quay lai cell cach 2 step neu khong co danger;
+  - neu A-B-A-B lap nhieu lan, day agent toi farm/item target gan nhat co safe path.
+- Bomb escape quality:
+  - truoc khi cong `box_bomb`, kiem tra sau dat bom co it nhat mot escape route co buffer;
+  - phat `PLACE_BOMB` neu target value thap va sau do de bi ep STOP;
+  - rieng cac seed own-bomb death, replay scoring quanh step dat bom de xem component nao thang.
+- Late tie-break:
+  - neu step > `350`, nhieu opponent con song va proxy rank kem, tang farm/pressure thay vi STOP;
+  - neu khong con farm target tot, uu tien mobility va pressure an toan.
+- Useful bomb ratio:
+  - giam no-value bomb o seed `126779`;
+  - giu hoac tang useful bombs o cac seed song lau;
+  - khong tang avg_bombs neu avg_boxes/items/kills khong tang.
+
+Acceptance rule_v2 theo log:
+
+```text
+survived_to_step500 >= 6/12
+death_before_step150 < 3/12
+own_bomb_death khong tang
+max STOP streak giam ro o seed 225587 va 609286
+seed 548846 va 126779 cai thien rank hoac tang proxy box/item/bomb value
+```
+
 ## 5. Behavior Cloning tasks
 
 Chi bat dau khi:
@@ -300,6 +386,12 @@ python agent/team_agent/bench/strategy_metrics.py --num-episodes 100 --seed 1
 python agent/team_agent/bench/benchmark.py --num-matches 50
 ```
 
+Analyze data_logs baseline:
+
+```bash
+python agent/team_agent/bench/analyze_data_logs.py --log-dir agent/data_logs --team-id 948d41ec-3dbd-4840-9ee5-f0d01cc1b6c0 --out-dir agent/team_agent/reports/data_logs
+```
+
 Match voi baseline manh:
 
 ```bash
@@ -318,6 +410,9 @@ python -m scripts.participant.estimate_agent_time agent/team_agent --opponents N
 - action ngoai `[0, 5]`;
 - p99 gan/vuot 100ms;
 - self-death tang ro;
+- analyzer van bao `own_bomb_escape_failure` tang;
+- STOP streak >= `100` con xuat hien o nhieu seed;
+- song toi 500 nhung rank/proxy tie-break khong cai thien so voi rule_v1;
 - benchmark duoi 50 tran;
 - chi thang random nhung thua baseline manh qua ro;
 - BC/PPO rank kem rule nhung van muon submit vi loss/reward dep.
@@ -353,6 +448,7 @@ ppo_best
 rule_v2 co benchmark tot hon hoac on dinh hon rule_v1
 self-death khong tang
 boxes/items/kills hoac step500 rank cai thien
+data_logs analyzer cho thay STOP streak va own-bomb trap khong te hon rule_v1
 p99 latency < 100ms
 BC duoc benchmark neu da train
 co bang version selection de chot submit_final

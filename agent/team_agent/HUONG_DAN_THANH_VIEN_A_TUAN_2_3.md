@@ -36,12 +36,53 @@ Neu chet, chet vi danger map, mask, shield, timeout, hay scorer?
 
 Lam theo thu tu nay:
 
-1. Harden safety harness len 300 seed.
-2. Test agent o du 4 slot `agent_id = 0, 1, 2, 3`.
-3. Phan loai death reason trong benchmark/replay.
-4. Chuan hoa `person_a_safety/features.py` cho BC.
-5. Lam ro semantic cua `safe_distances`.
-6. Ho tro B sinh dataset BC nhung khong dua train code vao `act()`.
+1. Regression replay cho 6 seed loi tu `data_logs`.
+2. Audit `safe_actions` va `final_shield` o cac state truoc khi `safe=[]`.
+3. Lam `first_escape_action(...)` hoac helper tuong duong de shield uu tien thoat som khoi blast line.
+4. Harden `can_place_bomb_safely` voi cac case dat bom roi bi ep STOP.
+5. Chay lai analyzer sau moi fix safety.
+6. Harden safety harness len 300 seed.
+7. Test agent o du 4 slot `agent_id = 0, 1, 2, 3`.
+8. Phan loai death reason trong benchmark/replay.
+9. Chuan hoa `person_a_safety/features.py` cho BC.
+10. Lam ro semantic cua `safe_distances`.
+11. Ho tro B sinh dataset BC nhung khong dua train code vao `act()`.
+
+## 2.1 Tình trạng mới từ data_logs submit_rule_v1
+
+Nguon bao cao:
+
+- `agent/team_agent/reports/data_logs/BAO_CAO_TONG_HOP_948d41ec.md`
+- `agent/team_agent/reports/data_logs/VAN_DE_PERSON_A_SAFETY.md`
+- `agent/team_agent/reports/data_logs/TIMELINE_CAC_TRAN_QUAN_TRONG.md`
+
+Metric hien tai cua 12 tran log:
+
+```text
+average_rank = 2.00
+survived_to_step500 = 6/12
+died_before_step500 = 6/12
+early_death_before_step150 = 3/12
+stop_streak_ge_20 = 6/12
+own_bomb_escape_failure = 5 case
+enemy_bomb_trap = 1 case
+current_code_safety_replay_flag = 6 tran
+```
+
+Case safety can xu ly truoc:
+
+- `109659`: own-bomb escape failure, step `86-92`, dat bom `[11,9]`, dung/kẹt quanh `[11,8]`, den luc replay co `safe=[]`, `shielded=STOP`.
+- `290518`: own-bomb escape failure, step `321-327`, dat bom `[7,5]`, sau do STOP lien tiep tai `[7,4]`.
+- `225587`: own-bomb escape failure, step `218-223`, dat bom `[3,3]`, kẹt `[3,4]`, co bom doi thu chen line.
+- `585440`: own-bomb escape failure, step `411-417`, chet trong blast line bom minh radius lon.
+- `648293`: own-bomb escape failure, step `126-132`, dat bom `[7,7]`, quay lai blast line.
+- `836037`: enemy-bomb trap, step `58-63`, ping-pong trong vung bom doi thu.
+
+Ket luan tam thoi:
+
+- Nhieu replay example co `safe=[]`, `shielded=STOP`; nghia la luc do shield da het move hop le de cuu.
+- A khong nen chi sua fallback khi `safe=[]`; can bat dau canh bao/ep escape som hon tu cac step truoc do.
+- Death classification trong report van la heuristic, phai xac minh bang replay/harness truoc khi ket luan bug safety tuyet doi.
 
 ## 3. API A can chot
 
@@ -177,6 +218,45 @@ safe_mask = safe_actions(state, danger_time)
 
 Khong can train model. A chi dam bao feature va mask on dinh, nhanh, test du.
 
+### A8. Regression từ data_logs
+
+Muc tieu:
+
+- Bien cac seed loi trong `data_logs` thanh regression replay co the chay lai sau moi fix.
+- Phan biet ro 3 loai:
+  - safety sai vi cho action nguy hiem;
+  - scorer di vao trap som nhung safety luc do van hop le;
+  - state da trapped-before-action, khong con duong cuu that.
+
+Case bat buoc:
+
+- Seed `109659`, steps `86-92`: dat bom o `[11,9]`, dung tai `[11,8]`, chet do own bomb.
+- Seed `225587`, steps `218-223`: dat bom `[3,3]`, ket `[3,4]`, co enemy bomb trong cung blast line.
+- Seed `648293`, steps `126-132`: dat bom `[7,7]`, quay lai blast line truoc khi bom no.
+- Seed `836037`, steps `58-63`: ping-pong trong vung bom doi thu.
+
+Can lam:
+
+- Reconstruct obs tu log tai tung step can xem.
+- Chay `parse_obs`, `compute_danger_map`, `safe_actions`, `final_shield`.
+- Luu bang:
+  - `step`;
+  - `pos`;
+  - `logged_action`;
+  - `safe_actions`;
+  - `shielded_action`;
+  - `danger_time[self_pos]`;
+  - `death_class`.
+- Neu `safe=[]`, truy nguoc 3-8 step truoc do de tim action dau tien lam mat duong thoat.
+
+Definition of done:
+
+```text
+replay khong con den trang thai safe=[] muon ma khong co canh bao truoc
+neu khong co duong thoat that, report phai phan loai trapped-before-action
+own_bomb_escape_failure trong log regression giam ve 0 hoac co giai thich khong the cuu
+```
+
 ## 5. Checklist tuan 3
 
 ### A5. Benchmark hardening lon
@@ -264,6 +344,12 @@ Match sanity:
 python -m scripts.participant.run_local_match --agent_paths agent/team_agent None None None --num_episodes 20 --visualize false --seed 1
 ```
 
+Data log analyzer:
+
+```bash
+python agent/team_agent/bench/analyze_data_logs.py --log-dir agent/data_logs --team-id 948d41ec-3dbd-4840-9ee5-f0d01cc1b6c0 --out-dir agent/team_agent/reports/data_logs
+```
+
 ## 7. Khong duoc submit neu
 
 - `act()` crash.
@@ -294,6 +380,8 @@ submit_final
 pytest pass
 compileall pass
 engine safety harness 300 seed pass own_bomb_deaths = 0
+data_logs regression khong con own_bomb_escape_failure chua giai thich
+current-code replay unsafe actions da duoc phan loai: safety qua chat, scorer vao trap som, hay log tu code submit cu
 feature encoder san sang cho BC
 benchmark/report co p95/p99 latency
 submit folder cua version chot validate pass

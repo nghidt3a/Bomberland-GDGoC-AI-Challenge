@@ -1,0 +1,4928 @@
+{
+  "team_id": "948d41ec-3dbd-4840-9ee5-f0d01cc1b6c0",
+  "log_dir": "agent\\data_logs",
+  "generated_at": "2026-06-01T17:31:28",
+  "matches": [
+    {
+      "file": "match_20260601_094346_109659.json",
+      "seed": 109659,
+      "has_target": true,
+      "player_index": 3,
+      "rank": 3,
+      "survival_steps": 92,
+      "death_step": 92,
+      "final_alive": false,
+      "action_counts": {
+        "STOP": 5,
+        "LEFT": 7,
+        "RIGHT": 7,
+        "UP": 31,
+        "DOWN": 38,
+        "PLACE_BOMB": 4
+      },
+      "phase_metrics": {
+        "early": {
+          "actions": {
+            "STOP": 5,
+            "LEFT": 7,
+            "RIGHT": 7,
+            "UP": 31,
+            "DOWN": 38,
+            "PLACE_BOMB": 4
+          },
+          "steps_alive": 92,
+          "unique_cells": 18,
+          "bombs": 4,
+          "stop_streak_max": 5
+        },
+        "mid": {
+          "actions": {
+            "STOP": 0,
+            "LEFT": 0,
+            "RIGHT": 0,
+            "UP": 0,
+            "DOWN": 0,
+            "PLACE_BOMB": 0
+          },
+          "steps_alive": 0,
+          "unique_cells": 0,
+          "bombs": 0,
+          "stop_streak_max": 0
+        },
+        "late": {
+          "actions": {
+            "STOP": 0,
+            "LEFT": 0,
+            "RIGHT": 0,
+            "UP": 0,
+            "DOWN": 0,
+            "PLACE_BOMB": 0
+          },
+          "steps_alive": 0,
+          "unique_cells": 0,
+          "bombs": 0,
+          "stop_streak_max": 0
+        }
+      },
+      "max_stop_streak": 5,
+      "bomb_steps": [
+        49,
+        76,
+        82,
+        86
+      ],
+      "bomb_count": 4,
+      "unique_cells_while_alive": 18,
+      "mobility_rate": 0.1956521739130435,
+      "last_alive_pos": [
+        11,
+        8
+      ],
+      "start_radius": 1,
+      "max_radius": 2,
+      "end_radius": 2,
+      "start_bombs_left": 1,
+      "max_bombs_left": 2,
+      "end_bombs_left": 1,
+      "start_boxes": 30,
+      "end_boxes_while_alive": 0,
+      "start_items": 0,
+      "end_items_while_alive": 0,
+      "ping_pong_max": 13,
+      "ping_pong_count": 38,
+      "bomb_metrics": {
+        "events": [
+          {
+            "step": 49,
+            "pos": [
+              9,
+              3
+            ],
+            "timer": 6,
+            "radius": 1,
+            "target_boxes": 1,
+            "destroyed_boxes": 1,
+            "enemies_in_blast": [],
+            "value": 1
+          },
+          {
+            "step": 76,
+            "pos": [
+              11,
+              7
+            ],
+            "timer": 6,
+            "radius": 2,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [],
+            "value": 0
+          },
+          {
+            "step": 82,
+            "pos": [
+              10,
+              11
+            ],
+            "timer": 6,
+            "radius": 2,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              2
+            ],
+            "value": 1
+          },
+          {
+            "step": 86,
+            "pos": [
+              11,
+              9
+            ],
+            "timer": 6,
+            "radius": 2,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              1
+            ],
+            "value": 1
+          }
+        ],
+        "own_bombs_observed": 4,
+        "useful_bombs": 3,
+        "no_value_bombs": 1,
+        "destroyed_boxes_proxy": 1,
+        "burst_pairs_le_3_steps": 0
+      },
+      "death": {
+        "class": "own_bomb_escape_failure",
+        "exploding_bombs": [
+          {
+            "pos": [
+              11,
+              9
+            ],
+            "timer": 1,
+            "owner": 3,
+            "radius": 2
+          },
+          {
+            "pos": [
+              11,
+              7
+            ],
+            "timer": 2,
+            "owner": 1,
+            "radius": 2
+          }
+        ],
+        "reason": "Chết trong blast line của bom mình gần thời điểm nổ."
+      },
+      "death_timeline": [
+        {
+          "step": 84,
+          "pos": [
+            11,
+            10
+          ],
+          "action": "UP",
+          "alive": true,
+          "near_bombs": [
+            "(8,11,t4,o2)",
+            "(10,11,t4,o3)"
+          ],
+          "issue_tags": []
+        },
+        {
+          "step": 85,
+          "pos": [
+            11,
+            9
+          ],
+          "action": "UP",
+          "alive": true,
+          "near_bombs": [
+            "(7,7,t3,o1)",
+            "(8,11,t3,o2)",
+            "(10,11,t3,o3)"
+          ],
+          "issue_tags": []
+        },
+        {
+          "step": 86,
+          "pos": [
+            11,
+            9
+          ],
+          "action": "PLACE_BOMB",
+          "alive": true,
+          "near_bombs": [
+            "(7,7,t2,o1)",
+            "(8,11,t2,o2)",
+            "(10,11,t2,o3)",
+            "(11,9,t6,o3)"
+          ],
+          "issue_tags": []
+        },
+        {
+          "step": 87,
+          "pos": [
+            11,
+            8
+          ],
+          "action": "UP",
+          "alive": true,
+          "near_bombs": [
+            "(8,11,t1,o2)",
+            "(10,11,t1,o3)",
+            "(11,9,t5,o3)",
+            "(11,7,t6,o1)"
+          ],
+          "issue_tags": []
+        },
+        {
+          "step": 88,
+          "pos": [
+            11,
+            8
+          ],
+          "action": "STOP",
+          "alive": true,
+          "near_bombs": [
+            "(11,9,t4,o3)",
+            "(11,7,t5,o1)"
+          ],
+          "issue_tags": [
+            "stop"
+          ]
+        },
+        {
+          "step": 89,
+          "pos": [
+            11,
+            8
+          ],
+          "action": "STOP",
+          "alive": true,
+          "near_bombs": [
+            "(11,9,t3,o3)",
+            "(11,7,t4,o1)"
+          ],
+          "issue_tags": [
+            "stop"
+          ]
+        },
+        {
+          "step": 90,
+          "pos": [
+            11,
+            8
+          ],
+          "action": "STOP",
+          "alive": true,
+          "near_bombs": [
+            "(11,9,t2,o3)",
+            "(11,7,t3,o1)"
+          ],
+          "issue_tags": [
+            "stop",
+            "danger_line",
+            "own_bomb_line"
+          ]
+        },
+        {
+          "step": 91,
+          "pos": [
+            11,
+            8
+          ],
+          "action": "STOP",
+          "alive": true,
+          "near_bombs": [
+            "(11,9,t1,o3)",
+            "(11,7,t2,o1)"
+          ],
+          "issue_tags": [
+            "stop",
+            "danger_line",
+            "own_bomb_line",
+            "danger_line",
+            "enemy_bomb_line"
+          ]
+        },
+        {
+          "step": 92,
+          "pos": [
+            11,
+            8
+          ],
+          "action": "STOP",
+          "alive": false,
+          "near_bombs": [],
+          "issue_tags": [
+            "stop",
+            "death:own_bomb_escape_failure"
+          ]
+        }
+      ],
+      "safety_replay": {
+        "available": true,
+        "error": null,
+        "checked_actions": 92,
+        "unsafe_actions": 5,
+        "shield_changes": 0,
+        "examples": [
+          {
+            "step": 88,
+            "pos": [
+              11,
+              8
+            ],
+            "action": "STOP",
+            "safe_actions": [],
+            "shielded": "STOP"
+          },
+          {
+            "step": 89,
+            "pos": [
+              11,
+              8
+            ],
+            "action": "STOP",
+            "safe_actions": [],
+            "shielded": "STOP"
+          },
+          {
+            "step": 90,
+            "pos": [
+              11,
+              8
+            ],
+            "action": "STOP",
+            "safe_actions": [],
+            "shielded": "STOP"
+          },
+          {
+            "step": 91,
+            "pos": [
+              11,
+              8
+            ],
+            "action": "STOP",
+            "safe_actions": [],
+            "shielded": "STOP"
+          },
+          {
+            "step": 92,
+            "pos": [
+              11,
+              8
+            ],
+            "action": "STOP",
+            "safe_actions": [],
+            "shielded": "STOP"
+          }
+        ]
+      },
+      "runtime": {
+        "timeouts": 0,
+        "errors": 0,
+        "invalid_actions": 0,
+        "fallback_uses": 0
+      },
+      "issues": [
+        "own_bomb_escape_failure",
+        "early_death",
+        "ping_pong_loop",
+        "current_safety_replay_flags"
+      ]
+    },
+    {
+      "file": "match_20260601_094349_548846.json",
+      "seed": 548846,
+      "has_target": true,
+      "player_index": 0,
+      "rank": 2,
+      "survival_steps": 500,
+      "death_step": null,
+      "final_alive": true,
+      "action_counts": {
+        "STOP": 76,
+        "LEFT": 85,
+        "RIGHT": 87,
+        "UP": 111,
+        "DOWN": 112,
+        "PLACE_BOMB": 29
+      },
+      "phase_metrics": {
+        "early": {
+          "actions": {
+            "STOP": 74,
+            "LEFT": 7,
+            "RIGHT": 17,
+            "UP": 19,
+            "DOWN": 28,
+            "PLACE_BOMB": 4
+          },
+          "steps_alive": 150,
+          "unique_cells": 38,
+          "bombs": 4,
+          "stop_streak_max": 74
+        },
+        "mid": {
+          "actions": {
+            "STOP": 0,
+            "LEFT": 48,
+            "RIGHT": 46,
+            "UP": 50,
+            "DOWN": 47,
+            "PLACE_BOMB": 9
+          },
+          "steps_alive": 200,
+          "unique_cells": 29,
+          "bombs": 9,
+          "stop_streak_max": 0
+        },
+        "late": {
+          "actions": {
+            "STOP": 2,
+            "LEFT": 30,
+            "RIGHT": 24,
+            "UP": 42,
+            "DOWN": 37,
+            "PLACE_BOMB": 16
+          },
+          "steps_alive": 151,
+          "unique_cells": 67,
+          "bombs": 16,
+          "stop_streak_max": 2
+        }
+      },
+      "max_stop_streak": 74,
+      "bomb_steps": [
+        81,
+        102,
+        112,
+        120,
+        153,
+        163,
+        181,
+        186,
+        195,
+        240,
+        293,
+        318,
+        327,
+        357,
+        369,
+        380,
+        399,
+        412,
+        427,
+        436,
+        448,
+        451,
+        454,
+        459,
+        481,
+        486,
+        492,
+        497,
+        500
+      ],
+      "bomb_count": 29,
+      "unique_cells_while_alive": 79,
+      "mobility_rate": 0.158,
+      "last_alive_pos": [
+        3,
+        2
+      ],
+      "start_radius": 1,
+      "max_radius": 5,
+      "end_radius": 5,
+      "start_bombs_left": 1,
+      "max_bombs_left": 4,
+      "end_bombs_left": 3,
+      "start_boxes": 23,
+      "end_boxes_while_alive": 0,
+      "start_items": 0,
+      "end_items_while_alive": 0,
+      "ping_pong_max": 14,
+      "ping_pong_count": 45,
+      "bomb_metrics": {
+        "events": [
+          {
+            "step": 81,
+            "pos": [
+              3,
+              3
+            ],
+            "timer": 6,
+            "radius": 2,
+            "target_boxes": 2,
+            "destroyed_boxes": 2,
+            "enemies_in_blast": [],
+            "value": 2
+          },
+          {
+            "step": 102,
+            "pos": [
+              1,
+              5
+            ],
+            "timer": 6,
+            "radius": 2,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              3
+            ],
+            "value": 1
+          },
+          {
+            "step": 112,
+            "pos": [
+              2,
+              9
+            ],
+            "timer": 6,
+            "radius": 2,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [],
+            "value": 0
+          },
+          {
+            "step": 120,
+            "pos": [
+              5,
+              11
+            ],
+            "timer": 6,
+            "radius": 2,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [],
+            "value": 0
+          },
+          {
+            "step": 153,
+            "pos": [
+              9,
+              9
+            ],
+            "timer": 6,
+            "radius": 2,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              2
+            ],
+            "value": 1
+          },
+          {
+            "step": 163,
+            "pos": [
+              9,
+              10
+            ],
+            "timer": 6,
+            "radius": 2,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              2
+            ],
+            "value": 1
+          },
+          {
+            "step": 195,
+            "pos": [
+              9,
+              9
+            ],
+            "timer": 6,
+            "radius": 2,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [],
+            "value": 0
+          },
+          {
+            "step": 240,
+            "pos": [
+              9,
+              9
+            ],
+            "timer": 6,
+            "radius": 2,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              2
+            ],
+            "value": 1
+          },
+          {
+            "step": 293,
+            "pos": [
+              9,
+              9
+            ],
+            "timer": 6,
+            "radius": 2,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [],
+            "value": 0
+          },
+          {
+            "step": 318,
+            "pos": [
+              9,
+              9
+            ],
+            "timer": 6,
+            "radius": 2,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              2
+            ],
+            "value": 1
+          },
+          {
+            "step": 327,
+            "pos": [
+              9,
+              9
+            ],
+            "timer": 6,
+            "radius": 2,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              2
+            ],
+            "value": 1
+          },
+          {
+            "step": 357,
+            "pos": [
+              10,
+              3
+            ],
+            "timer": 6,
+            "radius": 2,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              1
+            ],
+            "value": 1
+          },
+          {
+            "step": 369,
+            "pos": [
+              11,
+              7
+            ],
+            "timer": 6,
+            "radius": 2,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [],
+            "value": 0
+          },
+          {
+            "step": 380,
+            "pos": [
+              7,
+              7
+            ],
+            "timer": 6,
+            "radius": 2,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              1
+            ],
+            "value": 1
+          },
+          {
+            "step": 399,
+            "pos": [
+              1,
+              9
+            ],
+            "timer": 6,
+            "radius": 4,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              2
+            ],
+            "value": 1
+          },
+          {
+            "step": 412,
+            "pos": [
+              3,
+              9
+            ],
+            "timer": 6,
+            "radius": 4,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [],
+            "value": 0
+          },
+          {
+            "step": 427,
+            "pos": [
+              3,
+              9
+            ],
+            "timer": 6,
+            "radius": 4,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              3
+            ],
+            "value": 1
+          },
+          {
+            "step": 436,
+            "pos": [
+              3,
+              9
+            ],
+            "timer": 6,
+            "radius": 4,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [],
+            "value": 0
+          },
+          {
+            "step": 448,
+            "pos": [
+              2,
+              9
+            ],
+            "timer": 6,
+            "radius": 4,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              1
+            ],
+            "value": 1
+          },
+          {
+            "step": 451,
+            "pos": [
+              3,
+              10
+            ],
+            "timer": 6,
+            "radius": 4,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              1
+            ],
+            "value": 1
+          },
+          {
+            "step": 454,
+            "pos": [
+              4,
+              11
+            ],
+            "timer": 6,
+            "radius": 4,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              1
+            ],
+            "value": 1
+          },
+          {
+            "step": 459,
+            "pos": [
+              6,
+              9
+            ],
+            "timer": 6,
+            "radius": 4,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              1
+            ],
+            "value": 1
+          },
+          {
+            "step": 481,
+            "pos": [
+              7,
+              3
+            ],
+            "timer": 6,
+            "radius": 5,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              3
+            ],
+            "value": 1
+          },
+          {
+            "step": 486,
+            "pos": [
+              5,
+              1
+            ],
+            "timer": 6,
+            "radius": 5,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              1,
+              3
+            ],
+            "value": 2
+          },
+          {
+            "step": 492,
+            "pos": [
+              1,
+              2
+            ],
+            "timer": 6,
+            "radius": 5,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              3
+            ],
+            "value": 1
+          },
+          {
+            "step": 497,
+            "pos": [
+              2,
+              1
+            ],
+            "timer": 6,
+            "radius": 5,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              1,
+              3
+            ],
+            "value": 2
+          },
+          {
+            "step": 500,
+            "pos": [
+              3,
+              2
+            ],
+            "timer": 6,
+            "radius": 5,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [],
+            "value": 0
+          }
+        ],
+        "own_bombs_observed": 27,
+        "useful_bombs": 19,
+        "no_value_bombs": 8,
+        "destroyed_boxes_proxy": 2,
+        "burst_pairs_le_3_steps": 3
+      },
+      "death": {
+        "class": "survived",
+        "exploding_bombs": [],
+        "reason": "Agent sống đến hết trận."
+      },
+      "death_timeline": [],
+      "safety_replay": {
+        "available": true,
+        "error": null,
+        "checked_actions": 500,
+        "unsafe_actions": 0,
+        "shield_changes": 0,
+        "examples": []
+      },
+      "runtime": {
+        "timeouts": 0,
+        "errors": 0,
+        "invalid_actions": 0,
+        "fallback_uses": 0
+      },
+      "issues": [
+        "long_stop_streak",
+        "ping_pong_loop",
+        "step500_tiebreak_weak"
+      ]
+    },
+    {
+      "file": "match_20260601_094351_156663.json",
+      "seed": 156663,
+      "has_target": true,
+      "player_index": 0,
+      "rank": 1,
+      "survival_steps": 500,
+      "death_step": null,
+      "final_alive": true,
+      "action_counts": {
+        "STOP": 3,
+        "LEFT": 52,
+        "RIGHT": 62,
+        "UP": 188,
+        "DOWN": 192,
+        "PLACE_BOMB": 3
+      },
+      "phase_metrics": {
+        "early": {
+          "actions": {
+            "STOP": 3,
+            "LEFT": 51,
+            "RIGHT": 52,
+            "UP": 15,
+            "DOWN": 25,
+            "PLACE_BOMB": 3
+          },
+          "steps_alive": 150,
+          "unique_cells": 26,
+          "bombs": 3,
+          "stop_streak_max": 1
+        },
+        "mid": {
+          "actions": {
+            "STOP": 0,
+            "LEFT": 1,
+            "RIGHT": 10,
+            "UP": 98,
+            "DOWN": 91,
+            "PLACE_BOMB": 0
+          },
+          "steps_alive": 200,
+          "unique_cells": 17,
+          "bombs": 0,
+          "stop_streak_max": 0
+        },
+        "late": {
+          "actions": {
+            "STOP": 0,
+            "LEFT": 0,
+            "RIGHT": 0,
+            "UP": 75,
+            "DOWN": 76,
+            "PLACE_BOMB": 0
+          },
+          "steps_alive": 151,
+          "unique_cells": 2,
+          "bombs": 0,
+          "stop_streak_max": 0
+        }
+      },
+      "max_stop_streak": 1,
+      "bomb_steps": [
+        89,
+        96,
+        130
+      ],
+      "bomb_count": 3,
+      "unique_cells_while_alive": 36,
+      "mobility_rate": 0.072,
+      "last_alive_pos": [
+        11,
+        5
+      ],
+      "start_radius": 1,
+      "max_radius": 2,
+      "end_radius": 2,
+      "start_bombs_left": 1,
+      "max_bombs_left": 5,
+      "end_bombs_left": 5,
+      "start_boxes": 17,
+      "end_boxes_while_alive": 2,
+      "start_items": 0,
+      "end_items_while_alive": 12,
+      "ping_pong_max": 327,
+      "ping_pong_count": 438,
+      "bomb_metrics": {
+        "events": [
+          {
+            "step": 89,
+            "pos": [
+              2,
+              3
+            ],
+            "timer": 6,
+            "radius": 1,
+            "target_boxes": 1,
+            "destroyed_boxes": 1,
+            "enemies_in_blast": [],
+            "value": 1
+          },
+          {
+            "step": 96,
+            "pos": [
+              5,
+              1
+            ],
+            "timer": 6,
+            "radius": 1,
+            "target_boxes": 1,
+            "destroyed_boxes": 1,
+            "enemies_in_blast": [],
+            "value": 1
+          },
+          {
+            "step": 130,
+            "pos": [
+              3,
+              8
+            ],
+            "timer": 6,
+            "radius": 2,
+            "target_boxes": 1,
+            "destroyed_boxes": 1,
+            "enemies_in_blast": [],
+            "value": 1
+          }
+        ],
+        "own_bombs_observed": 3,
+        "useful_bombs": 3,
+        "no_value_bombs": 0,
+        "destroyed_boxes_proxy": 3,
+        "burst_pairs_le_3_steps": 0
+      },
+      "death": {
+        "class": "survived",
+        "exploding_bombs": [],
+        "reason": "Agent sống đến hết trận."
+      },
+      "death_timeline": [],
+      "safety_replay": {
+        "available": true,
+        "error": null,
+        "checked_actions": 500,
+        "unsafe_actions": 0,
+        "shield_changes": 0,
+        "examples": []
+      },
+      "runtime": {
+        "timeouts": 0,
+        "errors": 0,
+        "invalid_actions": 0,
+        "fallback_uses": 0
+      },
+      "issues": [
+        "ping_pong_loop",
+        "low_mobility",
+        "bomb_underuse"
+      ]
+    },
+    {
+      "file": "match_20260601_094356_83824.json",
+      "seed": 83824,
+      "has_target": true,
+      "player_index": 2,
+      "rank": 0,
+      "survival_steps": 500,
+      "death_step": null,
+      "final_alive": true,
+      "action_counts": {
+        "STOP": 18,
+        "LEFT": 110,
+        "RIGHT": 114,
+        "UP": 117,
+        "DOWN": 113,
+        "PLACE_BOMB": 28
+      },
+      "phase_metrics": {
+        "early": {
+          "actions": {
+            "STOP": 12,
+            "LEFT": 37,
+            "RIGHT": 47,
+            "UP": 26,
+            "DOWN": 22,
+            "PLACE_BOMB": 5
+          },
+          "steps_alive": 150,
+          "unique_cells": 35,
+          "bombs": 5,
+          "stop_streak_max": 9
+        },
+        "mid": {
+          "actions": {
+            "STOP": 2,
+            "LEFT": 37,
+            "RIGHT": 35,
+            "UP": 58,
+            "DOWN": 60,
+            "PLACE_BOMB": 8
+          },
+          "steps_alive": 200,
+          "unique_cells": 48,
+          "bombs": 8,
+          "stop_streak_max": 1
+        },
+        "late": {
+          "actions": {
+            "STOP": 4,
+            "LEFT": 36,
+            "RIGHT": 32,
+            "UP": 33,
+            "DOWN": 31,
+            "PLACE_BOMB": 15
+          },
+          "steps_alive": 151,
+          "unique_cells": 61,
+          "bombs": 15,
+          "stop_streak_max": 1
+        }
+      },
+      "max_stop_streak": 9,
+      "bomb_steps": [
+        82,
+        84,
+        90,
+        137,
+        148,
+        151,
+        169,
+        174,
+        179,
+        185,
+        209,
+        214,
+        263,
+        374,
+        389,
+        394,
+        400,
+        409,
+        418,
+        427,
+        436,
+        459,
+        465,
+        475,
+        484,
+        490,
+        493,
+        496
+      ],
+      "bomb_count": 28,
+      "unique_cells_while_alive": 82,
+      "mobility_rate": 0.164,
+      "last_alive_pos": [
+        5,
+        7
+      ],
+      "start_radius": 1,
+      "max_radius": 5,
+      "end_radius": 5,
+      "start_bombs_left": 1,
+      "max_bombs_left": 5,
+      "end_bombs_left": 4,
+      "start_boxes": 25,
+      "end_boxes_while_alive": 0,
+      "start_items": 0,
+      "end_items_while_alive": 0,
+      "ping_pong_max": 53,
+      "ping_pong_count": 102,
+      "bomb_metrics": {
+        "events": [
+          {
+            "step": 82,
+            "pos": [
+              3,
+              7
+            ],
+            "timer": 6,
+            "radius": 2,
+            "target_boxes": 2,
+            "destroyed_boxes": 2,
+            "enemies_in_blast": [
+              1
+            ],
+            "value": 3
+          },
+          {
+            "step": 84,
+            "pos": [
+              3,
+              8
+            ],
+            "timer": 6,
+            "radius": 2,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              1
+            ],
+            "value": 1
+          },
+          {
+            "step": 90,
+            "pos": [
+              2,
+              10
+            ],
+            "timer": 6,
+            "radius": 2,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [],
+            "value": 0
+          },
+          {
+            "step": 137,
+            "pos": [
+              11,
+              8
+            ],
+            "timer": 6,
+            "radius": 2,
+            "target_boxes": 1,
+            "destroyed_boxes": 1,
+            "enemies_in_blast": [
+              1
+            ],
+            "value": 2
+          },
+          {
+            "step": 148,
+            "pos": [
+              11,
+              6
+            ],
+            "timer": 6,
+            "radius": 2,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [],
+            "value": 0
+          },
+          {
+            "step": 151,
+            "pos": [
+              10,
+              7
+            ],
+            "timer": 6,
+            "radius": 2,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [],
+            "value": 0
+          },
+          {
+            "step": 169,
+            "pos": [
+              9,
+              3
+            ],
+            "timer": 6,
+            "radius": 2,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              1
+            ],
+            "value": 1
+          },
+          {
+            "step": 174,
+            "pos": [
+              7,
+              4
+            ],
+            "timer": 6,
+            "radius": 2,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [],
+            "value": 0
+          },
+          {
+            "step": 179,
+            "pos": [
+              9,
+              5
+            ],
+            "timer": 6,
+            "radius": 2,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [],
+            "value": 0
+          },
+          {
+            "step": 209,
+            "pos": [
+              5,
+              3
+            ],
+            "timer": 6,
+            "radius": 2,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              3
+            ],
+            "value": 1
+          },
+          {
+            "step": 214,
+            "pos": [
+              7,
+              1
+            ],
+            "timer": 6,
+            "radius": 2,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [],
+            "value": 0
+          },
+          {
+            "step": 263,
+            "pos": [
+              9,
+              7
+            ],
+            "timer": 6,
+            "radius": 2,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [],
+            "value": 0
+          },
+          {
+            "step": 374,
+            "pos": [
+              7,
+              9
+            ],
+            "timer": 6,
+            "radius": 3,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [],
+            "value": 0
+          },
+          {
+            "step": 389,
+            "pos": [
+              3,
+              3
+            ],
+            "timer": 6,
+            "radius": 4,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              0,
+              1
+            ],
+            "value": 2
+          },
+          {
+            "step": 394,
+            "pos": [
+              1,
+              1
+            ],
+            "timer": 6,
+            "radius": 4,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              0
+            ],
+            "value": 1
+          },
+          {
+            "step": 400,
+            "pos": [
+              3,
+              3
+            ],
+            "timer": 6,
+            "radius": 4,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              1,
+              3
+            ],
+            "value": 2
+          },
+          {
+            "step": 409,
+            "pos": [
+              3,
+              3
+            ],
+            "timer": 6,
+            "radius": 4,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [],
+            "value": 0
+          },
+          {
+            "step": 418,
+            "pos": [
+              3,
+              3
+            ],
+            "timer": 6,
+            "radius": 4,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [],
+            "value": 0
+          },
+          {
+            "step": 427,
+            "pos": [
+              3,
+              3
+            ],
+            "timer": 6,
+            "radius": 4,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [],
+            "value": 0
+          },
+          {
+            "step": 436,
+            "pos": [
+              3,
+              3
+            ],
+            "timer": 6,
+            "radius": 4,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [],
+            "value": 0
+          },
+          {
+            "step": 459,
+            "pos": [
+              7,
+              5
+            ],
+            "timer": 6,
+            "radius": 5,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              3
+            ],
+            "value": 1
+          },
+          {
+            "step": 465,
+            "pos": [
+              4,
+              3
+            ],
+            "timer": 6,
+            "radius": 5,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              3
+            ],
+            "value": 1
+          },
+          {
+            "step": 475,
+            "pos": [
+              7,
+              9
+            ],
+            "timer": 6,
+            "radius": 5,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              1
+            ],
+            "value": 1
+          },
+          {
+            "step": 484,
+            "pos": [
+              3,
+              11
+            ],
+            "timer": 6,
+            "radius": 5,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              1
+            ],
+            "value": 1
+          },
+          {
+            "step": 490,
+            "pos": [
+              1,
+              10
+            ],
+            "timer": 6,
+            "radius": 5,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              1
+            ],
+            "value": 1
+          },
+          {
+            "step": 493,
+            "pos": [
+              2,
+              9
+            ],
+            "timer": 6,
+            "radius": 5,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              1
+            ],
+            "value": 1
+          },
+          {
+            "step": 496,
+            "pos": [
+              3,
+              8
+            ],
+            "timer": 6,
+            "radius": 5,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              1
+            ],
+            "value": 1
+          }
+        ],
+        "own_bombs_observed": 27,
+        "useful_bombs": 15,
+        "no_value_bombs": 12,
+        "destroyed_boxes_proxy": 3,
+        "burst_pairs_le_3_steps": 4
+      },
+      "death": {
+        "class": "survived",
+        "exploding_bombs": [],
+        "reason": "Agent sống đến hết trận."
+      },
+      "death_timeline": [],
+      "safety_replay": {
+        "available": true,
+        "error": null,
+        "checked_actions": 500,
+        "unsafe_actions": 0,
+        "shield_changes": 0,
+        "examples": []
+      },
+      "runtime": {
+        "timeouts": 0,
+        "errors": 0,
+        "invalid_actions": 0,
+        "fallback_uses": 0
+      },
+      "issues": [
+        "ping_pong_loop"
+      ]
+    },
+    {
+      "file": "match_20260601_094357_290518.json",
+      "seed": 290518,
+      "has_target": true,
+      "player_index": 3,
+      "rank": 3,
+      "survival_steps": 327,
+      "death_step": 327,
+      "final_alive": false,
+      "action_counts": {
+        "STOP": 49,
+        "LEFT": 58,
+        "RIGHT": 54,
+        "UP": 76,
+        "DOWN": 79,
+        "PLACE_BOMB": 11
+      },
+      "phase_metrics": {
+        "early": {
+          "actions": {
+            "STOP": 44,
+            "LEFT": 19,
+            "RIGHT": 18,
+            "UP": 28,
+            "DOWN": 37,
+            "PLACE_BOMB": 3
+          },
+          "steps_alive": 150,
+          "unique_cells": 50,
+          "bombs": 3,
+          "stop_streak_max": 42
+        },
+        "mid": {
+          "actions": {
+            "STOP": 5,
+            "LEFT": 39,
+            "RIGHT": 36,
+            "UP": 48,
+            "DOWN": 42,
+            "PLACE_BOMB": 8
+          },
+          "steps_alive": 177,
+          "unique_cells": 45,
+          "bombs": 8,
+          "stop_streak_max": 5
+        },
+        "late": {
+          "actions": {
+            "STOP": 0,
+            "LEFT": 0,
+            "RIGHT": 0,
+            "UP": 0,
+            "DOWN": 0,
+            "PLACE_BOMB": 0
+          },
+          "steps_alive": 0,
+          "unique_cells": 0,
+          "bombs": 0,
+          "stop_streak_max": 0
+        }
+      },
+      "max_stop_streak": 42,
+      "bomb_steps": [
+        48,
+        67,
+        85,
+        238,
+        281,
+        298,
+        301,
+        305,
+        309,
+        314,
+        321
+      ],
+      "bomb_count": 11,
+      "unique_cells_while_alive": 60,
+      "mobility_rate": 0.1834862385321101,
+      "last_alive_pos": [
+        7,
+        4
+      ],
+      "start_radius": 1,
+      "max_radius": 3,
+      "end_radius": 3,
+      "start_bombs_left": 1,
+      "max_bombs_left": 5,
+      "end_bombs_left": 4,
+      "start_boxes": 24,
+      "end_boxes_while_alive": 0,
+      "start_items": 0,
+      "end_items_while_alive": 0,
+      "ping_pong_max": 3,
+      "ping_pong_count": 7,
+      "bomb_metrics": {
+        "events": [
+          {
+            "step": 48,
+            "pos": [
+              9,
+              2
+            ],
+            "timer": 6,
+            "radius": 1,
+            "target_boxes": 1,
+            "destroyed_boxes": 1,
+            "enemies_in_blast": [],
+            "value": 1
+          },
+          {
+            "step": 67,
+            "pos": [
+              7,
+              11
+            ],
+            "timer": 6,
+            "radius": 1,
+            "target_boxes": 1,
+            "destroyed_boxes": 1,
+            "enemies_in_blast": [],
+            "value": 1
+          },
+          {
+            "step": 85,
+            "pos": [
+              7,
+              1
+            ],
+            "timer": 6,
+            "radius": 1,
+            "target_boxes": 1,
+            "destroyed_boxes": 1,
+            "enemies_in_blast": [],
+            "value": 1
+          },
+          {
+            "step": 238,
+            "pos": [
+              9,
+              1
+            ],
+            "timer": 6,
+            "radius": 3,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [],
+            "value": 0
+          },
+          {
+            "step": 281,
+            "pos": [
+              7,
+              3
+            ],
+            "timer": 6,
+            "radius": 3,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              0,
+              1
+            ],
+            "value": 2
+          },
+          {
+            "step": 298,
+            "pos": [
+              3,
+              9
+            ],
+            "timer": 6,
+            "radius": 3,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              1,
+              2
+            ],
+            "value": 2
+          },
+          {
+            "step": 301,
+            "pos": [
+              3,
+              11
+            ],
+            "timer": 6,
+            "radius": 3,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              0
+            ],
+            "value": 1
+          },
+          {
+            "step": 305,
+            "pos": [
+              5,
+              10
+            ],
+            "timer": 6,
+            "radius": 3,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              0
+            ],
+            "value": 1
+          },
+          {
+            "step": 309,
+            "pos": [
+              7,
+              9
+            ],
+            "timer": 6,
+            "radius": 3,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              0
+            ],
+            "value": 1
+          },
+          {
+            "step": 314,
+            "pos": [
+              9,
+              7
+            ],
+            "timer": 6,
+            "radius": 3,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              0
+            ],
+            "value": 1
+          },
+          {
+            "step": 321,
+            "pos": [
+              7,
+              5
+            ],
+            "timer": 6,
+            "radius": 3,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              0
+            ],
+            "value": 1
+          }
+        ],
+        "own_bombs_observed": 11,
+        "useful_bombs": 10,
+        "no_value_bombs": 1,
+        "destroyed_boxes_proxy": 3,
+        "burst_pairs_le_3_steps": 1
+      },
+      "death": {
+        "class": "own_bomb_escape_failure",
+        "exploding_bombs": [
+          {
+            "pos": [
+              7,
+              5
+            ],
+            "timer": 1,
+            "owner": 3,
+            "radius": 3
+          },
+          {
+            "pos": [
+              7,
+              3
+            ],
+            "timer": 2,
+            "owner": 0,
+            "radius": 2
+          }
+        ],
+        "reason": "Chết trong blast line của bom mình gần thời điểm nổ."
+      },
+      "death_timeline": [
+        {
+          "step": 319,
+          "pos": [
+            7,
+            6
+          ],
+          "action": "DOWN",
+          "alive": true,
+          "near_bombs": [
+            "(9,7,t1,o3)",
+            "(5,8,t6,o1)"
+          ],
+          "issue_tags": []
+        },
+        {
+          "step": 320,
+          "pos": [
+            7,
+            5
+          ],
+          "action": "UP",
+          "alive": true,
+          "near_bombs": [
+            "(5,8,t5,o1)"
+          ],
+          "issue_tags": []
+        },
+        {
+          "step": 321,
+          "pos": [
+            7,
+            5
+          ],
+          "action": "PLACE_BOMB",
+          "alive": true,
+          "near_bombs": [
+            "(5,8,t4,o1)",
+            "(7,5,t6,o3)"
+          ],
+          "issue_tags": []
+        },
+        {
+          "step": 322,
+          "pos": [
+            7,
+            4
+          ],
+          "action": "UP",
+          "alive": true,
+          "near_bombs": [
+            "(5,8,t3,o1)",
+            "(7,5,t5,o3)",
+            "(7,3,t6,o0)",
+            "(6,7,t6,o1)"
+          ],
+          "issue_tags": []
+        },
+        {
+          "step": 323,
+          "pos": [
+            7,
+            4
+          ],
+          "action": "STOP",
+          "alive": true,
+          "near_bombs": [
+            "(5,8,t2,o1)",
+            "(7,5,t4,o3)",
+            "(7,3,t5,o0)",
+            "(6,7,t5,o1)"
+          ],
+          "issue_tags": [
+            "stop"
+          ]
+        },
+        {
+          "step": 324,
+          "pos": [
+            7,
+            4
+          ],
+          "action": "STOP",
+          "alive": true,
+          "near_bombs": [
+            "(5,8,t1,o1)",
+            "(7,5,t3,o3)",
+            "(7,3,t4,o0)",
+            "(6,7,t4,o1)"
+          ],
+          "issue_tags": [
+            "stop"
+          ]
+        },
+        {
+          "step": 325,
+          "pos": [
+            7,
+            4
+          ],
+          "action": "STOP",
+          "alive": true,
+          "near_bombs": [
+            "(7,5,t2,o3)",
+            "(7,3,t3,o0)",
+            "(6,7,t3,o1)"
+          ],
+          "issue_tags": [
+            "stop",
+            "danger_line",
+            "own_bomb_line"
+          ]
+        },
+        {
+          "step": 326,
+          "pos": [
+            7,
+            4
+          ],
+          "action": "STOP",
+          "alive": true,
+          "near_bombs": [
+            "(7,5,t1,o3)",
+            "(7,3,t2,o0)",
+            "(6,7,t2,o1)",
+            "(4,3,t6,o0)"
+          ],
+          "issue_tags": [
+            "stop",
+            "danger_line",
+            "own_bomb_line",
+            "danger_line",
+            "enemy_bomb_line"
+          ]
+        },
+        {
+          "step": 327,
+          "pos": [
+            7,
+            4
+          ],
+          "action": "STOP",
+          "alive": false,
+          "near_bombs": [
+            "(6,7,t1,o1)",
+            "(4,3,t5,o0)",
+            "(3,6,t6,o2)"
+          ],
+          "issue_tags": [
+            "stop",
+            "death:own_bomb_escape_failure"
+          ]
+        }
+      ],
+      "safety_replay": {
+        "available": true,
+        "error": null,
+        "checked_actions": 327,
+        "unsafe_actions": 5,
+        "shield_changes": 0,
+        "examples": [
+          {
+            "step": 323,
+            "pos": [
+              7,
+              4
+            ],
+            "action": "STOP",
+            "safe_actions": [],
+            "shielded": "STOP"
+          },
+          {
+            "step": 324,
+            "pos": [
+              7,
+              4
+            ],
+            "action": "STOP",
+            "safe_actions": [],
+            "shielded": "STOP"
+          },
+          {
+            "step": 325,
+            "pos": [
+              7,
+              4
+            ],
+            "action": "STOP",
+            "safe_actions": [],
+            "shielded": "STOP"
+          },
+          {
+            "step": 326,
+            "pos": [
+              7,
+              4
+            ],
+            "action": "STOP",
+            "safe_actions": [],
+            "shielded": "STOP"
+          },
+          {
+            "step": 327,
+            "pos": [
+              7,
+              4
+            ],
+            "action": "STOP",
+            "safe_actions": [],
+            "shielded": "STOP"
+          }
+        ]
+      },
+      "runtime": {
+        "timeouts": 0,
+        "errors": 0,
+        "invalid_actions": 0,
+        "fallback_uses": 0
+      },
+      "issues": [
+        "own_bomb_escape_failure",
+        "long_stop_streak",
+        "current_safety_replay_flags"
+      ]
+    },
+    {
+      "file": "match_20260601_094400_548409.json",
+      "seed": 548409,
+      "has_target": true,
+      "player_index": 3,
+      "rank": 1,
+      "survival_steps": 500,
+      "death_step": null,
+      "final_alive": true,
+      "action_counts": {
+        "STOP": 45,
+        "LEFT": 94,
+        "RIGHT": 93,
+        "UP": 119,
+        "DOWN": 128,
+        "PLACE_BOMB": 21
+      },
+      "phase_metrics": {
+        "early": {
+          "actions": {
+            "STOP": 43,
+            "LEFT": 19,
+            "RIGHT": 16,
+            "UP": 31,
+            "DOWN": 39,
+            "PLACE_BOMB": 1
+          },
+          "steps_alive": 150,
+          "unique_cells": 23,
+          "bombs": 1,
+          "stop_streak_max": 25
+        },
+        "mid": {
+          "actions": {
+            "STOP": 1,
+            "LEFT": 41,
+            "RIGHT": 44,
+            "UP": 51,
+            "DOWN": 47,
+            "PLACE_BOMB": 16
+          },
+          "steps_alive": 200,
+          "unique_cells": 53,
+          "bombs": 16,
+          "stop_streak_max": 1
+        },
+        "late": {
+          "actions": {
+            "STOP": 1,
+            "LEFT": 34,
+            "RIGHT": 33,
+            "UP": 37,
+            "DOWN": 42,
+            "PLACE_BOMB": 4
+          },
+          "steps_alive": 151,
+          "unique_cells": 31,
+          "bombs": 4,
+          "stop_streak_max": 1
+        }
+      },
+      "max_stop_streak": 25,
+      "bomb_steps": [
+        30,
+        155,
+        164,
+        186,
+        195,
+        198,
+        215,
+        226,
+        235,
+        246,
+        261,
+        288,
+        293,
+        300,
+        309,
+        332,
+        347,
+        394,
+        400,
+        404,
+        412
+      ],
+      "bomb_count": 21,
+      "unique_cells_while_alive": 74,
+      "mobility_rate": 0.148,
+      "last_alive_pos": [
+        10,
+        10
+      ],
+      "start_radius": 1,
+      "max_radius": 4,
+      "end_radius": 4,
+      "start_bombs_left": 1,
+      "max_bombs_left": 3,
+      "end_bombs_left": 3,
+      "start_boxes": 26,
+      "end_boxes_while_alive": 0,
+      "start_items": 0,
+      "end_items_while_alive": 0,
+      "ping_pong_max": 38,
+      "ping_pong_count": 87,
+      "bomb_metrics": {
+        "events": [
+          {
+            "step": 30,
+            "pos": [
+              9,
+              3
+            ],
+            "timer": 6,
+            "radius": 1,
+            "target_boxes": 2,
+            "destroyed_boxes": 2,
+            "enemies_in_blast": [],
+            "value": 2
+          },
+          {
+            "step": 155,
+            "pos": [
+              3,
+              9
+            ],
+            "timer": 6,
+            "radius": 2,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              0
+            ],
+            "value": 1
+          },
+          {
+            "step": 164,
+            "pos": [
+              3,
+              9
+            ],
+            "timer": 6,
+            "radius": 2,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [],
+            "value": 0
+          },
+          {
+            "step": 186,
+            "pos": [
+              2,
+              9
+            ],
+            "timer": 6,
+            "radius": 2,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              0
+            ],
+            "value": 1
+          },
+          {
+            "step": 195,
+            "pos": [
+              2,
+              11
+            ],
+            "timer": 6,
+            "radius": 2,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              0
+            ],
+            "value": 1
+          },
+          {
+            "step": 198,
+            "pos": [
+              3,
+              10
+            ],
+            "timer": 6,
+            "radius": 2,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              0
+            ],
+            "value": 1
+          },
+          {
+            "step": 215,
+            "pos": [
+              3,
+              9
+            ],
+            "timer": 6,
+            "radius": 2,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              0
+            ],
+            "value": 1
+          },
+          {
+            "step": 226,
+            "pos": [
+              3,
+              3
+            ],
+            "timer": 6,
+            "radius": 2,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              0
+            ],
+            "value": 1
+          },
+          {
+            "step": 235,
+            "pos": [
+              3,
+              3
+            ],
+            "timer": 6,
+            "radius": 2,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [],
+            "value": 0
+          },
+          {
+            "step": 246,
+            "pos": [
+              3,
+              1
+            ],
+            "timer": 6,
+            "radius": 2,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [],
+            "value": 0
+          },
+          {
+            "step": 261,
+            "pos": [
+              3,
+              1
+            ],
+            "timer": 6,
+            "radius": 2,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [],
+            "value": 0
+          },
+          {
+            "step": 300,
+            "pos": [
+              11,
+              9
+            ],
+            "timer": 6,
+            "radius": 2,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [],
+            "value": 0
+          },
+          {
+            "step": 309,
+            "pos": [
+              9,
+              9
+            ],
+            "timer": 6,
+            "radius": 2,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              0
+            ],
+            "value": 1
+          },
+          {
+            "step": 332,
+            "pos": [
+              9,
+              9
+            ],
+            "timer": 6,
+            "radius": 2,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              0
+            ],
+            "value": 1
+          },
+          {
+            "step": 347,
+            "pos": [
+              11,
+              7
+            ],
+            "timer": 6,
+            "radius": 2,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [],
+            "value": 0
+          },
+          {
+            "step": 400,
+            "pos": [
+              11,
+              10
+            ],
+            "timer": 6,
+            "radius": 3,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              0
+            ],
+            "value": 1
+          },
+          {
+            "step": 404,
+            "pos": [
+              9,
+              11
+            ],
+            "timer": 6,
+            "radius": 3,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [],
+            "value": 0
+          },
+          {
+            "step": 412,
+            "pos": [
+              5,
+              9
+            ],
+            "timer": 6,
+            "radius": 4,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              0
+            ],
+            "value": 1
+          }
+        ],
+        "own_bombs_observed": 18,
+        "useful_bombs": 11,
+        "no_value_bombs": 7,
+        "destroyed_boxes_proxy": 2,
+        "burst_pairs_le_3_steps": 1
+      },
+      "death": {
+        "class": "survived",
+        "exploding_bombs": [],
+        "reason": "Agent sống đến hết trận."
+      },
+      "death_timeline": [],
+      "safety_replay": {
+        "available": true,
+        "error": null,
+        "checked_actions": 500,
+        "unsafe_actions": 0,
+        "shield_changes": 0,
+        "examples": []
+      },
+      "runtime": {
+        "timeouts": 0,
+        "errors": 0,
+        "invalid_actions": 0,
+        "fallback_uses": 0
+      },
+      "issues": [
+        "long_stop_streak",
+        "ping_pong_loop"
+      ]
+    },
+    {
+      "file": "match_20260601_094452_225587.json",
+      "seed": 225587,
+      "has_target": true,
+      "player_index": 3,
+      "rank": 2,
+      "survival_steps": 223,
+      "death_step": 223,
+      "final_alive": false,
+      "action_counts": {
+        "STOP": 133,
+        "LEFT": 15,
+        "RIGHT": 7,
+        "UP": 31,
+        "DOWN": 34,
+        "PLACE_BOMB": 3
+      },
+      "phase_metrics": {
+        "early": {
+          "actions": {
+            "STOP": 117,
+            "LEFT": 11,
+            "RIGHT": 3,
+            "UP": 7,
+            "DOWN": 10,
+            "PLACE_BOMB": 1
+          },
+          "steps_alive": 150,
+          "unique_cells": 18,
+          "bombs": 1,
+          "stop_streak_max": 115
+        },
+        "mid": {
+          "actions": {
+            "STOP": 16,
+            "LEFT": 4,
+            "RIGHT": 4,
+            "UP": 24,
+            "DOWN": 24,
+            "PLACE_BOMB": 2
+          },
+          "steps_alive": 73,
+          "unique_cells": 14,
+          "bombs": 2,
+          "stop_streak_max": 11
+        },
+        "late": {
+          "actions": {
+            "STOP": 0,
+            "LEFT": 0,
+            "RIGHT": 0,
+            "UP": 0,
+            "DOWN": 0,
+            "PLACE_BOMB": 0
+          },
+          "steps_alive": 0,
+          "unique_cells": 0,
+          "bombs": 0,
+          "stop_streak_max": 0
+        }
+      },
+      "max_stop_streak": 115,
+      "bomb_steps": [
+        121,
+        189,
+        218
+      ],
+      "bomb_count": 3,
+      "unique_cells_while_alive": 30,
+      "mobility_rate": 0.13452914798206278,
+      "last_alive_pos": [
+        3,
+        4
+      ],
+      "start_radius": 1,
+      "max_radius": 3,
+      "end_radius": 3,
+      "start_bombs_left": 1,
+      "max_bombs_left": 2,
+      "end_bombs_left": 1,
+      "start_boxes": 33,
+      "end_boxes_while_alive": 2,
+      "start_items": 0,
+      "end_items_while_alive": 0,
+      "ping_pong_max": 45,
+      "ping_pong_count": 45,
+      "bomb_metrics": {
+        "events": [
+          {
+            "step": 121,
+            "pos": [
+              11,
+              2
+            ],
+            "timer": 6,
+            "radius": 1,
+            "target_boxes": 1,
+            "destroyed_boxes": 1,
+            "enemies_in_blast": [],
+            "value": 1
+          },
+          {
+            "step": 189,
+            "pos": [
+              1,
+              5
+            ],
+            "timer": 6,
+            "radius": 2,
+            "target_boxes": 1,
+            "destroyed_boxes": 1,
+            "enemies_in_blast": [],
+            "value": 1
+          },
+          {
+            "step": 218,
+            "pos": [
+              3,
+              3
+            ],
+            "timer": 6,
+            "radius": 3,
+            "target_boxes": 2,
+            "destroyed_boxes": 2,
+            "enemies_in_blast": [
+              0
+            ],
+            "value": 3
+          }
+        ],
+        "own_bombs_observed": 3,
+        "useful_bombs": 3,
+        "no_value_bombs": 0,
+        "destroyed_boxes_proxy": 4,
+        "burst_pairs_le_3_steps": 0
+      },
+      "death": {
+        "class": "own_bomb_escape_failure",
+        "exploding_bombs": [
+          {
+            "pos": [
+              3,
+              6
+            ],
+            "timer": 1,
+            "owner": 0,
+            "radius": 3
+          },
+          {
+            "pos": [
+              3,
+              3
+            ],
+            "timer": 2,
+            "owner": 3,
+            "radius": 3
+          },
+          {
+            "pos": [
+              3,
+              5
+            ],
+            "timer": 3,
+            "owner": 0,
+            "radius": 3
+          }
+        ],
+        "reason": "Chết trong blast line của bom mình gần thời điểm nổ."
+      },
+      "death_timeline": [
+        {
+          "step": 215,
+          "pos": [
+            3,
+            3
+          ],
+          "action": "STOP",
+          "alive": true,
+          "near_bombs": [],
+          "issue_tags": [
+            "stop"
+          ]
+        },
+        {
+          "step": 216,
+          "pos": [
+            3,
+            3
+          ],
+          "action": "STOP",
+          "alive": true,
+          "near_bombs": [],
+          "issue_tags": [
+            "stop"
+          ]
+        },
+        {
+          "step": 217,
+          "pos": [
+            3,
+            3
+          ],
+          "action": "STOP",
+          "alive": true,
+          "near_bombs": [
+            "(3,6,t6,o0)"
+          ],
+          "issue_tags": [
+            "stop"
+          ]
+        },
+        {
+          "step": 218,
+          "pos": [
+            3,
+            3
+          ],
+          "action": "PLACE_BOMB",
+          "alive": true,
+          "near_bombs": [
+            "(3,6,t5,o0)",
+            "(3,3,t6,o3)"
+          ],
+          "issue_tags": []
+        },
+        {
+          "step": 219,
+          "pos": [
+            3,
+            4
+          ],
+          "action": "DOWN",
+          "alive": true,
+          "near_bombs": [
+            "(3,6,t4,o0)",
+            "(3,3,t5,o3)",
+            "(3,5,t6,o0)"
+          ],
+          "issue_tags": []
+        },
+        {
+          "step": 220,
+          "pos": [
+            3,
+            4
+          ],
+          "action": "STOP",
+          "alive": true,
+          "near_bombs": [
+            "(3,6,t3,o0)",
+            "(3,3,t4,o3)",
+            "(3,5,t5,o0)"
+          ],
+          "issue_tags": [
+            "stop"
+          ]
+        },
+        {
+          "step": 221,
+          "pos": [
+            3,
+            4
+          ],
+          "action": "STOP",
+          "alive": true,
+          "near_bombs": [
+            "(3,6,t2,o0)",
+            "(3,3,t3,o3)",
+            "(3,5,t4,o0)"
+          ],
+          "issue_tags": [
+            "stop",
+            "danger_line",
+            "enemy_bomb_line"
+          ]
+        },
+        {
+          "step": 222,
+          "pos": [
+            3,
+            4
+          ],
+          "action": "STOP",
+          "alive": true,
+          "near_bombs": [
+            "(3,6,t1,o0)",
+            "(3,3,t2,o3)",
+            "(3,5,t3,o0)"
+          ],
+          "issue_tags": [
+            "stop",
+            "danger_line",
+            "enemy_bomb_line",
+            "danger_line",
+            "own_bomb_line"
+          ]
+        },
+        {
+          "step": 223,
+          "pos": [
+            3,
+            4
+          ],
+          "action": "STOP",
+          "alive": false,
+          "near_bombs": [],
+          "issue_tags": [
+            "stop",
+            "death:own_bomb_escape_failure"
+          ]
+        }
+      ],
+      "safety_replay": {
+        "available": true,
+        "error": null,
+        "checked_actions": 223,
+        "unsafe_actions": 4,
+        "shield_changes": 0,
+        "examples": [
+          {
+            "step": 220,
+            "pos": [
+              3,
+              4
+            ],
+            "action": "STOP",
+            "safe_actions": [],
+            "shielded": "STOP"
+          },
+          {
+            "step": 221,
+            "pos": [
+              3,
+              4
+            ],
+            "action": "STOP",
+            "safe_actions": [],
+            "shielded": "STOP"
+          },
+          {
+            "step": 222,
+            "pos": [
+              3,
+              4
+            ],
+            "action": "STOP",
+            "safe_actions": [],
+            "shielded": "STOP"
+          },
+          {
+            "step": 223,
+            "pos": [
+              3,
+              4
+            ],
+            "action": "STOP",
+            "safe_actions": [],
+            "shielded": "STOP"
+          }
+        ]
+      },
+      "runtime": {
+        "timeouts": 0,
+        "errors": 0,
+        "invalid_actions": 0,
+        "fallback_uses": 0
+      },
+      "issues": [
+        "own_bomb_escape_failure",
+        "long_stop_streak",
+        "ping_pong_loop",
+        "bomb_underuse",
+        "current_safety_replay_flags"
+      ]
+    },
+    {
+      "file": "match_20260601_094453_836037.json",
+      "seed": 836037,
+      "has_target": true,
+      "player_index": 0,
+      "rank": 3,
+      "survival_steps": 63,
+      "death_step": 63,
+      "final_alive": false,
+      "action_counts": {
+        "STOP": 24,
+        "LEFT": 10,
+        "RIGHT": 14,
+        "UP": 7,
+        "DOWN": 7,
+        "PLACE_BOMB": 1
+      },
+      "phase_metrics": {
+        "early": {
+          "actions": {
+            "STOP": 24,
+            "LEFT": 10,
+            "RIGHT": 14,
+            "UP": 7,
+            "DOWN": 7,
+            "PLACE_BOMB": 1
+          },
+          "steps_alive": 63,
+          "unique_cells": 13,
+          "bombs": 1,
+          "stop_streak_max": 20
+        },
+        "mid": {
+          "actions": {
+            "STOP": 0,
+            "LEFT": 0,
+            "RIGHT": 0,
+            "UP": 0,
+            "DOWN": 0,
+            "PLACE_BOMB": 0
+          },
+          "steps_alive": 0,
+          "unique_cells": 0,
+          "bombs": 0,
+          "stop_streak_max": 0
+        },
+        "late": {
+          "actions": {
+            "STOP": 0,
+            "LEFT": 0,
+            "RIGHT": 0,
+            "UP": 0,
+            "DOWN": 0,
+            "PLACE_BOMB": 0
+          },
+          "steps_alive": 0,
+          "unique_cells": 0,
+          "bombs": 0,
+          "stop_streak_max": 0
+        }
+      },
+      "max_stop_streak": 20,
+      "bomb_steps": [
+        3
+      ],
+      "bomb_count": 1,
+      "unique_cells_while_alive": 13,
+      "mobility_rate": 0.20634920634920634,
+      "last_alive_pos": [
+        4,
+        1
+      ],
+      "start_radius": 1,
+      "max_radius": 2,
+      "end_radius": 2,
+      "start_bombs_left": 1,
+      "max_bombs_left": 2,
+      "end_bombs_left": 2,
+      "start_boxes": 21,
+      "end_boxes_while_alive": 4,
+      "start_items": 0,
+      "end_items_while_alive": 0,
+      "ping_pong_max": 9,
+      "ping_pong_count": 17,
+      "bomb_metrics": {
+        "events": [
+          {
+            "step": 3,
+            "pos": [
+              1,
+              2
+            ],
+            "timer": 6,
+            "radius": 1,
+            "target_boxes": 1,
+            "destroyed_boxes": 1,
+            "enemies_in_blast": [],
+            "value": 1
+          }
+        ],
+        "own_bombs_observed": 1,
+        "useful_bombs": 1,
+        "no_value_bombs": 0,
+        "destroyed_boxes_proxy": 1,
+        "burst_pairs_le_3_steps": 0
+      },
+      "death": {
+        "class": "enemy_bomb_trap",
+        "exploding_bombs": [
+          {
+            "pos": [
+              3,
+              1
+            ],
+            "timer": 1,
+            "owner": 1,
+            "radius": 2
+          }
+        ],
+        "reason": "Chết trong blast line của bom đối thủ gần thời điểm nổ."
+      },
+      "death_timeline": [
+        {
+          "step": 55,
+          "pos": [
+            5,
+            1
+          ],
+          "action": "STOP",
+          "alive": true,
+          "near_bombs": [
+            "(3,5,t3,o1)"
+          ],
+          "issue_tags": [
+            "stop"
+          ]
+        },
+        {
+          "step": 56,
+          "pos": [
+            5,
+            1
+          ],
+          "action": "STOP",
+          "alive": true,
+          "near_bombs": [
+            "(5,6,t6,o2)"
+          ],
+          "issue_tags": [
+            "stop"
+          ]
+        },
+        {
+          "step": 57,
+          "pos": [
+            5,
+            1
+          ],
+          "action": "STOP",
+          "alive": true,
+          "near_bombs": [
+            "(5,6,t5,o2)",
+            "(3,1,t6,o1)"
+          ],
+          "issue_tags": [
+            "stop"
+          ]
+        },
+        {
+          "step": 58,
+          "pos": [
+            4,
+            1
+          ],
+          "action": "LEFT",
+          "alive": true,
+          "near_bombs": [
+            "(5,6,t4,o2)",
+            "(3,1,t5,o1)",
+            "(3,3,t6,o3)"
+          ],
+          "issue_tags": []
+        },
+        {
+          "step": 59,
+          "pos": [
+            5,
+            1
+          ],
+          "action": "RIGHT",
+          "alive": true,
+          "near_bombs": [
+            "(5,6,t3,o2)",
+            "(3,1,t4,o1)",
+            "(3,3,t5,o3)"
+          ],
+          "issue_tags": []
+        },
+        {
+          "step": 60,
+          "pos": [
+            4,
+            1
+          ],
+          "action": "LEFT",
+          "alive": true,
+          "near_bombs": [
+            "(5,6,t2,o2)",
+            "(3,1,t3,o1)",
+            "(3,3,t4,o3)"
+          ],
+          "issue_tags": []
+        },
+        {
+          "step": 61,
+          "pos": [
+            5,
+            1
+          ],
+          "action": "RIGHT",
+          "alive": true,
+          "near_bombs": [
+            "(5,6,t1,o2)",
+            "(3,1,t2,o1)",
+            "(3,3,t3,o3)"
+          ],
+          "issue_tags": [
+            "danger_line",
+            "enemy_bomb_line"
+          ]
+        },
+        {
+          "step": 62,
+          "pos": [
+            4,
+            1
+          ],
+          "action": "LEFT",
+          "alive": true,
+          "near_bombs": [
+            "(3,1,t1,o1)",
+            "(3,3,t2,o3)"
+          ],
+          "issue_tags": [
+            "danger_line",
+            "enemy_bomb_line"
+          ]
+        },
+        {
+          "step": 63,
+          "pos": [
+            5,
+            1
+          ],
+          "action": "RIGHT",
+          "alive": false,
+          "near_bombs": [],
+          "issue_tags": [
+            "death:enemy_bomb_trap"
+          ]
+        }
+      ],
+      "safety_replay": {
+        "available": true,
+        "error": null,
+        "checked_actions": 63,
+        "unsafe_actions": 6,
+        "shield_changes": 0,
+        "examples": [
+          {
+            "step": 58,
+            "pos": [
+              5,
+              1
+            ],
+            "action": "LEFT",
+            "safe_actions": [],
+            "shielded": "LEFT"
+          },
+          {
+            "step": 59,
+            "pos": [
+              4,
+              1
+            ],
+            "action": "RIGHT",
+            "safe_actions": [],
+            "shielded": "RIGHT"
+          },
+          {
+            "step": 60,
+            "pos": [
+              5,
+              1
+            ],
+            "action": "LEFT",
+            "safe_actions": [],
+            "shielded": "LEFT"
+          },
+          {
+            "step": 61,
+            "pos": [
+              4,
+              1
+            ],
+            "action": "RIGHT",
+            "safe_actions": [],
+            "shielded": "RIGHT"
+          },
+          {
+            "step": 62,
+            "pos": [
+              5,
+              1
+            ],
+            "action": "LEFT",
+            "safe_actions": [],
+            "shielded": "LEFT"
+          },
+          {
+            "step": 63,
+            "pos": [
+              4,
+              1
+            ],
+            "action": "RIGHT",
+            "safe_actions": [],
+            "shielded": "RIGHT"
+          }
+        ]
+      },
+      "runtime": {
+        "timeouts": 0,
+        "errors": 0,
+        "invalid_actions": 0,
+        "fallback_uses": 0
+      },
+      "issues": [
+        "enemy_bomb_trap",
+        "early_death",
+        "long_stop_streak",
+        "ping_pong_loop",
+        "bomb_underuse",
+        "current_safety_replay_flags"
+      ]
+    },
+    {
+      "file": "match_20260601_094457_585440.json",
+      "seed": 585440,
+      "has_target": true,
+      "player_index": 1,
+      "rank": 2,
+      "survival_steps": 417,
+      "death_step": 417,
+      "final_alive": false,
+      "action_counts": {
+        "STOP": 13,
+        "LEFT": 62,
+        "RIGHT": 54,
+        "UP": 130,
+        "DOWN": 129,
+        "PLACE_BOMB": 29
+      },
+      "phase_metrics": {
+        "early": {
+          "actions": {
+            "STOP": 2,
+            "LEFT": 13,
+            "RIGHT": 7,
+            "UP": 61,
+            "DOWN": 61,
+            "PLACE_BOMB": 5
+          },
+          "steps_alive": 150,
+          "unique_cells": 27,
+          "bombs": 5,
+          "stop_streak_max": 1
+        },
+        "mid": {
+          "actions": {
+            "STOP": 9,
+            "LEFT": 35,
+            "RIGHT": 33,
+            "UP": 56,
+            "DOWN": 47,
+            "PLACE_BOMB": 20
+          },
+          "steps_alive": 200,
+          "unique_cells": 47,
+          "bombs": 20,
+          "stop_streak_max": 4
+        },
+        "late": {
+          "actions": {
+            "STOP": 2,
+            "LEFT": 14,
+            "RIGHT": 14,
+            "UP": 13,
+            "DOWN": 21,
+            "PLACE_BOMB": 4
+          },
+          "steps_alive": 67,
+          "unique_cells": 27,
+          "bombs": 4,
+          "stop_streak_max": 1
+        }
+      },
+      "max_stop_streak": 4,
+      "bomb_steps": [
+        3,
+        125,
+        130,
+        134,
+        141,
+        150,
+        159,
+        181,
+        200,
+        215,
+        220,
+        230,
+        233,
+        235,
+        241,
+        244,
+        247,
+        251,
+        254,
+        257,
+        262,
+        265,
+        269,
+        272,
+        277,
+        404,
+        408,
+        411,
+        413
+      ],
+      "bomb_count": 29,
+      "unique_cells_while_alive": 69,
+      "mobility_rate": 0.16546762589928057,
+      "last_alive_pos": [
+        3,
+        9
+      ],
+      "start_radius": 1,
+      "max_radius": 4,
+      "end_radius": 4,
+      "start_bombs_left": 1,
+      "max_bombs_left": 4,
+      "end_bombs_left": 2,
+      "start_boxes": 24,
+      "end_boxes_while_alive": 0,
+      "start_items": 0,
+      "end_items_while_alive": 0,
+      "ping_pong_max": 70,
+      "ping_pong_count": 109,
+      "bomb_metrics": {
+        "events": [
+          {
+            "step": 3,
+            "pos": [
+              11,
+              10
+            ],
+            "timer": 6,
+            "radius": 1,
+            "target_boxes": 1,
+            "destroyed_boxes": 1,
+            "enemies_in_blast": [],
+            "value": 1
+          },
+          {
+            "step": 125,
+            "pos": [
+              9,
+              11
+            ],
+            "timer": 6,
+            "radius": 2,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              3
+            ],
+            "value": 1
+          },
+          {
+            "step": 130,
+            "pos": [
+              11,
+              9
+            ],
+            "timer": 6,
+            "radius": 2,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              3
+            ],
+            "value": 1
+          },
+          {
+            "step": 134,
+            "pos": [
+              10,
+              7
+            ],
+            "timer": 6,
+            "radius": 2,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              3
+            ],
+            "value": 1
+          },
+          {
+            "step": 141,
+            "pos": [
+              7,
+              5
+            ],
+            "timer": 6,
+            "radius": 2,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              2
+            ],
+            "value": 1
+          },
+          {
+            "step": 150,
+            "pos": [
+              5,
+              11
+            ],
+            "timer": 6,
+            "radius": 2,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [],
+            "value": 0
+          },
+          {
+            "step": 159,
+            "pos": [
+              8,
+              11
+            ],
+            "timer": 6,
+            "radius": 2,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              0
+            ],
+            "value": 1
+          },
+          {
+            "step": 181,
+            "pos": [
+              7,
+              1
+            ],
+            "timer": 6,
+            "radius": 2,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [],
+            "value": 0
+          },
+          {
+            "step": 200,
+            "pos": [
+              3,
+              11
+            ],
+            "timer": 6,
+            "radius": 3,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [],
+            "value": 0
+          },
+          {
+            "step": 215,
+            "pos": [
+              3,
+              11
+            ],
+            "timer": 6,
+            "radius": 3,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              2
+            ],
+            "value": 1
+          },
+          {
+            "step": 220,
+            "pos": [
+              1,
+              9
+            ],
+            "timer": 6,
+            "radius": 3,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              2
+            ],
+            "value": 1
+          },
+          {
+            "step": 230,
+            "pos": [
+              2,
+              9
+            ],
+            "timer": 6,
+            "radius": 3,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              0,
+              2
+            ],
+            "value": 2
+          },
+          {
+            "step": 233,
+            "pos": [
+              1,
+              10
+            ],
+            "timer": 6,
+            "radius": 3,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              2
+            ],
+            "value": 1
+          },
+          {
+            "step": 235,
+            "pos": [
+              1,
+              11
+            ],
+            "timer": 6,
+            "radius": 3,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              2
+            ],
+            "value": 1
+          },
+          {
+            "step": 241,
+            "pos": [
+              2,
+              10
+            ],
+            "timer": 6,
+            "radius": 3,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              2
+            ],
+            "value": 1
+          },
+          {
+            "step": 244,
+            "pos": [
+              1,
+              11
+            ],
+            "timer": 6,
+            "radius": 3,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              0,
+              2
+            ],
+            "value": 2
+          },
+          {
+            "step": 247,
+            "pos": [
+              1,
+              9
+            ],
+            "timer": 6,
+            "radius": 3,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              2
+            ],
+            "value": 1
+          },
+          {
+            "step": 251,
+            "pos": [
+              3,
+              10
+            ],
+            "timer": 6,
+            "radius": 3,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              2
+            ],
+            "value": 1
+          },
+          {
+            "step": 254,
+            "pos": [
+              2,
+              9
+            ],
+            "timer": 6,
+            "radius": 3,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              0,
+              2
+            ],
+            "value": 2
+          },
+          {
+            "step": 257,
+            "pos": [
+              1,
+              8
+            ],
+            "timer": 6,
+            "radius": 3,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              2
+            ],
+            "value": 1
+          },
+          {
+            "step": 262,
+            "pos": [
+              3,
+              8
+            ],
+            "timer": 6,
+            "radius": 3,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              0,
+              2
+            ],
+            "value": 2
+          },
+          {
+            "step": 265,
+            "pos": [
+              3,
+              6
+            ],
+            "timer": 6,
+            "radius": 3,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [],
+            "value": 0
+          },
+          {
+            "step": 269,
+            "pos": [
+              4,
+              7
+            ],
+            "timer": 6,
+            "radius": 3,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [],
+            "value": 0
+          },
+          {
+            "step": 272,
+            "pos": [
+              3,
+              8
+            ],
+            "timer": 6,
+            "radius": 3,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [],
+            "value": 0
+          },
+          {
+            "step": 277,
+            "pos": [
+              2,
+              11
+            ],
+            "timer": 6,
+            "radius": 3,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              0,
+              2
+            ],
+            "value": 2
+          },
+          {
+            "step": 404,
+            "pos": [
+              3,
+              9
+            ],
+            "timer": 6,
+            "radius": 4,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              2
+            ],
+            "value": 1
+          },
+          {
+            "step": 408,
+            "pos": [
+              2,
+              11
+            ],
+            "timer": 6,
+            "radius": 4,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              0
+            ],
+            "value": 1
+          },
+          {
+            "step": 411,
+            "pos": [
+              1,
+              10
+            ],
+            "timer": 6,
+            "radius": 4,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              2
+            ],
+            "value": 1
+          },
+          {
+            "step": 413,
+            "pos": [
+              1,
+              9
+            ],
+            "timer": 6,
+            "radius": 4,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              0
+            ],
+            "value": 1
+          }
+        ],
+        "own_bombs_observed": 29,
+        "useful_bombs": 23,
+        "no_value_bombs": 6,
+        "destroyed_boxes_proxy": 1,
+        "burst_pairs_le_3_steps": 10
+      },
+      "death": {
+        "class": "own_bomb_escape_failure",
+        "exploding_bombs": [
+          {
+            "pos": [
+              1,
+              10
+            ],
+            "timer": 1,
+            "owner": 1,
+            "radius": 4
+          }
+        ],
+        "reason": "Chết trong blast line của bom mình gần thời điểm nổ."
+      },
+      "death_timeline": [
+        {
+          "step": 409,
+          "pos": [
+            1,
+            11
+          ],
+          "action": "LEFT",
+          "alive": true,
+          "near_bombs": [
+            "(3,9,t1,o1)",
+            "(3,7,t1,o2)",
+            "(2,11,t5,o1)",
+            "(6,11,t6,o0)"
+          ],
+          "issue_tags": []
+        },
+        {
+          "step": 410,
+          "pos": [
+            1,
+            10
+          ],
+          "action": "UP",
+          "alive": true,
+          "near_bombs": [
+            "(2,11,t4,o1)",
+            "(6,11,t5,o0)"
+          ],
+          "issue_tags": []
+        },
+        {
+          "step": 411,
+          "pos": [
+            1,
+            10
+          ],
+          "action": "PLACE_BOMB",
+          "alive": true,
+          "near_bombs": [
+            "(2,11,t3,o1)",
+            "(6,11,t4,o0)",
+            "(1,10,t6,o1)"
+          ],
+          "issue_tags": []
+        },
+        {
+          "step": 412,
+          "pos": [
+            1,
+            9
+          ],
+          "action": "UP",
+          "alive": true,
+          "near_bombs": [
+            "(2,11,t2,o1)",
+            "(1,10,t5,o1)",
+            "(1,7,t6,o2)"
+          ],
+          "issue_tags": []
+        },
+        {
+          "step": 413,
+          "pos": [
+            1,
+            9
+          ],
+          "action": "PLACE_BOMB",
+          "alive": true,
+          "near_bombs": [
+            "(2,11,t1,o1)",
+            "(1,10,t4,o1)",
+            "(1,7,t5,o2)",
+            "(1,9,t6,o1)"
+          ],
+          "issue_tags": []
+        },
+        {
+          "step": 414,
+          "pos": [
+            1,
+            9
+          ],
+          "action": "STOP",
+          "alive": true,
+          "near_bombs": [
+            "(1,10,t3,o1)",
+            "(1,7,t4,o2)",
+            "(1,9,t5,o1)"
+          ],
+          "issue_tags": [
+            "stop"
+          ]
+        },
+        {
+          "step": 415,
+          "pos": [
+            2,
+            9
+          ],
+          "action": "RIGHT",
+          "alive": true,
+          "near_bombs": [
+            "(1,10,t2,o1)",
+            "(1,7,t3,o2)",
+            "(1,9,t4,o1)"
+          ],
+          "issue_tags": []
+        },
+        {
+          "step": 416,
+          "pos": [
+            3,
+            9
+          ],
+          "action": "RIGHT",
+          "alive": true,
+          "near_bombs": [
+            "(1,10,t1,o1)",
+            "(1,7,t2,o2)",
+            "(1,9,t3,o1)",
+            "(3,8,t6,o0)"
+          ],
+          "issue_tags": []
+        },
+        {
+          "step": 417,
+          "pos": [
+            3,
+            10
+          ],
+          "action": "DOWN",
+          "alive": false,
+          "near_bombs": [
+            "(3,8,t5,o0)"
+          ],
+          "issue_tags": [
+            "death:own_bomb_escape_failure"
+          ]
+        }
+      ],
+      "safety_replay": {
+        "available": true,
+        "error": null,
+        "checked_actions": 417,
+        "unsafe_actions": 1,
+        "shield_changes": 0,
+        "examples": [
+          {
+            "step": 417,
+            "pos": [
+              3,
+              9
+            ],
+            "action": "DOWN",
+            "safe_actions": [],
+            "shielded": "DOWN"
+          }
+        ]
+      },
+      "runtime": {
+        "timeouts": 0,
+        "errors": 0,
+        "invalid_actions": 0,
+        "fallback_uses": 0
+      },
+      "issues": [
+        "own_bomb_escape_failure",
+        "ping_pong_loop",
+        "current_safety_replay_flags"
+      ]
+    },
+    {
+      "file": "match_20260601_094501_648293.json",
+      "seed": 648293,
+      "has_target": true,
+      "player_index": 3,
+      "rank": 3,
+      "survival_steps": 132,
+      "death_step": 132,
+      "final_alive": false,
+      "action_counts": {
+        "STOP": 18,
+        "LEFT": 23,
+        "RIGHT": 19,
+        "UP": 30,
+        "DOWN": 34,
+        "PLACE_BOMB": 8
+      },
+      "phase_metrics": {
+        "early": {
+          "actions": {
+            "STOP": 18,
+            "LEFT": 23,
+            "RIGHT": 19,
+            "UP": 30,
+            "DOWN": 34,
+            "PLACE_BOMB": 8
+          },
+          "steps_alive": 132,
+          "unique_cells": 49,
+          "bombs": 8,
+          "stop_streak_max": 8
+        },
+        "mid": {
+          "actions": {
+            "STOP": 0,
+            "LEFT": 0,
+            "RIGHT": 0,
+            "UP": 0,
+            "DOWN": 0,
+            "PLACE_BOMB": 0
+          },
+          "steps_alive": 0,
+          "unique_cells": 0,
+          "bombs": 0,
+          "stop_streak_max": 0
+        },
+        "late": {
+          "actions": {
+            "STOP": 0,
+            "LEFT": 0,
+            "RIGHT": 0,
+            "UP": 0,
+            "DOWN": 0,
+            "PLACE_BOMB": 0
+          },
+          "steps_alive": 0,
+          "unique_cells": 0,
+          "bombs": 0,
+          "stop_streak_max": 0
+        }
+      },
+      "max_stop_streak": 8,
+      "bomb_steps": [
+        6,
+        13,
+        20,
+        34,
+        52,
+        75,
+        86,
+        126
+      ],
+      "bomb_count": 8,
+      "unique_cells_while_alive": 49,
+      "mobility_rate": 0.3712121212121212,
+      "last_alive_pos": [
+        7,
+        6
+      ],
+      "start_radius": 1,
+      "max_radius": 3,
+      "end_radius": 3,
+      "start_bombs_left": 1,
+      "max_bombs_left": 1,
+      "end_bombs_left": 0,
+      "start_boxes": 22,
+      "end_boxes_while_alive": 0,
+      "start_items": 0,
+      "end_items_while_alive": 0,
+      "ping_pong_max": 11,
+      "ping_pong_count": 28,
+      "bomb_metrics": {
+        "events": [
+          {
+            "step": 6,
+            "pos": [
+              9,
+              3
+            ],
+            "timer": 6,
+            "radius": 1,
+            "target_boxes": 1,
+            "destroyed_boxes": 1,
+            "enemies_in_blast": [],
+            "value": 1
+          },
+          {
+            "step": 13,
+            "pos": [
+              11,
+              5
+            ],
+            "timer": 6,
+            "radius": 1,
+            "target_boxes": 1,
+            "destroyed_boxes": 1,
+            "enemies_in_blast": [],
+            "value": 1
+          },
+          {
+            "step": 20,
+            "pos": [
+              9,
+              4
+            ],
+            "timer": 6,
+            "radius": 1,
+            "target_boxes": 1,
+            "destroyed_boxes": 1,
+            "enemies_in_blast": [],
+            "value": 1
+          },
+          {
+            "step": 34,
+            "pos": [
+              7,
+              4
+            ],
+            "timer": 6,
+            "radius": 1,
+            "target_boxes": 1,
+            "destroyed_boxes": 1,
+            "enemies_in_blast": [],
+            "value": 1
+          },
+          {
+            "step": 52,
+            "pos": [
+              5,
+              4
+            ],
+            "timer": 6,
+            "radius": 1,
+            "target_boxes": 1,
+            "destroyed_boxes": 1,
+            "enemies_in_blast": [],
+            "value": 1
+          },
+          {
+            "step": 75,
+            "pos": [
+              4,
+              5
+            ],
+            "timer": 6,
+            "radius": 2,
+            "target_boxes": 1,
+            "destroyed_boxes": 1,
+            "enemies_in_blast": [],
+            "value": 1
+          },
+          {
+            "step": 86,
+            "pos": [
+              2,
+              1
+            ],
+            "timer": 6,
+            "radius": 2,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              0
+            ],
+            "value": 1
+          },
+          {
+            "step": 126,
+            "pos": [
+              7,
+              7
+            ],
+            "timer": 6,
+            "radius": 3,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [],
+            "value": 0
+          }
+        ],
+        "own_bombs_observed": 8,
+        "useful_bombs": 7,
+        "no_value_bombs": 1,
+        "destroyed_boxes_proxy": 6,
+        "burst_pairs_le_3_steps": 0
+      },
+      "death": {
+        "class": "own_bomb_escape_failure",
+        "exploding_bombs": [
+          {
+            "pos": [
+              7,
+              7
+            ],
+            "timer": 1,
+            "owner": 3,
+            "radius": 3
+          }
+        ],
+        "reason": "Chết trong blast line của bom mình gần thời điểm nổ."
+      },
+      "death_timeline": [
+        {
+          "step": 124,
+          "pos": [
+            7,
+            8
+          ],
+          "action": "UP",
+          "alive": true,
+          "near_bombs": [],
+          "issue_tags": []
+        },
+        {
+          "step": 125,
+          "pos": [
+            7,
+            7
+          ],
+          "action": "UP",
+          "alive": true,
+          "near_bombs": [
+            "(5,3,t2,o2)",
+            "(4,5,t6,o0)"
+          ],
+          "issue_tags": []
+        },
+        {
+          "step": 126,
+          "pos": [
+            7,
+            7
+          ],
+          "action": "PLACE_BOMB",
+          "alive": true,
+          "near_bombs": [
+            "(5,3,t1,o2)",
+            "(4,5,t5,o0)",
+            "(7,7,t6,o3)"
+          ],
+          "issue_tags": []
+        },
+        {
+          "step": 127,
+          "pos": [
+            7,
+            6
+          ],
+          "action": "UP",
+          "alive": true,
+          "near_bombs": [
+            "(4,5,t4,o0)",
+            "(7,7,t5,o3)"
+          ],
+          "issue_tags": []
+        },
+        {
+          "step": 128,
+          "pos": [
+            7,
+            5
+          ],
+          "action": "UP",
+          "alive": true,
+          "near_bombs": [
+            "(4,5,t3,o0)",
+            "(7,7,t4,o3)"
+          ],
+          "issue_tags": []
+        },
+        {
+          "step": 129,
+          "pos": [
+            7,
+            4
+          ],
+          "action": "UP",
+          "alive": true,
+          "near_bombs": [
+            "(4,5,t2,o0)",
+            "(7,7,t3,o3)",
+            "(7,3,t6,o2)"
+          ],
+          "issue_tags": []
+        },
+        {
+          "step": 130,
+          "pos": [
+            7,
+            5
+          ],
+          "action": "DOWN",
+          "alive": true,
+          "near_bombs": [
+            "(4,5,t1,o0)",
+            "(7,7,t2,o3)",
+            "(7,3,t5,o2)",
+            "(5,4,t6,o0)"
+          ],
+          "issue_tags": [
+            "danger_line",
+            "enemy_bomb_line",
+            "danger_line",
+            "own_bomb_line"
+          ]
+        },
+        {
+          "step": 131,
+          "pos": [
+            7,
+            6
+          ],
+          "action": "DOWN",
+          "alive": true,
+          "near_bombs": [
+            "(7,7,t1,o3)",
+            "(7,3,t4,o2)",
+            "(5,4,t5,o0)"
+          ],
+          "issue_tags": [
+            "danger_line",
+            "own_bomb_line"
+          ]
+        },
+        {
+          "step": 132,
+          "pos": [
+            7,
+            5
+          ],
+          "action": "UP",
+          "alive": false,
+          "near_bombs": [
+            "(7,3,t3,o2)",
+            "(5,4,t4,o0)"
+          ],
+          "issue_tags": [
+            "death:own_bomb_escape_failure"
+          ]
+        }
+      ],
+      "safety_replay": {
+        "available": true,
+        "error": null,
+        "checked_actions": 132,
+        "unsafe_actions": 1,
+        "shield_changes": 0,
+        "examples": [
+          {
+            "step": 132,
+            "pos": [
+              7,
+              6
+            ],
+            "action": "UP",
+            "safe_actions": [],
+            "shielded": "UP"
+          }
+        ]
+      },
+      "runtime": {
+        "timeouts": 0,
+        "errors": 0,
+        "invalid_actions": 0,
+        "fallback_uses": 0
+      },
+      "issues": [
+        "own_bomb_escape_failure",
+        "early_death",
+        "ping_pong_loop",
+        "current_safety_replay_flags"
+      ]
+    },
+    {
+      "file": "match_20260601_094510_126779.json",
+      "seed": 126779,
+      "has_target": true,
+      "player_index": 1,
+      "rank": 3,
+      "survival_steps": 500,
+      "death_step": null,
+      "final_alive": true,
+      "action_counts": {
+        "STOP": 6,
+        "LEFT": 119,
+        "RIGHT": 119,
+        "UP": 119,
+        "DOWN": 118,
+        "PLACE_BOMB": 19
+      },
+      "phase_metrics": {
+        "early": {
+          "actions": {
+            "STOP": 0,
+            "LEFT": 48,
+            "RIGHT": 46,
+            "UP": 31,
+            "DOWN": 23,
+            "PLACE_BOMB": 1
+          },
+          "steps_alive": 150,
+          "unique_cells": 16,
+          "bombs": 1,
+          "stop_streak_max": 0
+        },
+        "mid": {
+          "actions": {
+            "STOP": 0,
+            "LEFT": 38,
+            "RIGHT": 36,
+            "UP": 53,
+            "DOWN": 61,
+            "PLACE_BOMB": 12
+          },
+          "steps_alive": 200,
+          "unique_cells": 45,
+          "bombs": 12,
+          "stop_streak_max": 0
+        },
+        "late": {
+          "actions": {
+            "STOP": 6,
+            "LEFT": 33,
+            "RIGHT": 37,
+            "UP": 35,
+            "DOWN": 34,
+            "PLACE_BOMB": 6
+          },
+          "steps_alive": 151,
+          "unique_cells": 47,
+          "bombs": 6,
+          "stop_streak_max": 1
+        }
+      },
+      "max_stop_streak": 1,
+      "bomb_steps": [
+        140,
+        152,
+        159,
+        174,
+        183,
+        194,
+        204,
+        222,
+        229,
+        250,
+        273,
+        290,
+        303,
+        396,
+        406,
+        433,
+        442,
+        477,
+        499
+      ],
+      "bomb_count": 19,
+      "unique_cells_while_alive": 63,
+      "mobility_rate": 0.126,
+      "last_alive_pos": [
+        11,
+        10
+      ],
+      "start_radius": 1,
+      "max_radius": 5,
+      "end_radius": 5,
+      "start_bombs_left": 1,
+      "max_bombs_left": 5,
+      "end_bombs_left": 4,
+      "start_boxes": 28,
+      "end_boxes_while_alive": 0,
+      "start_items": 0,
+      "end_items_while_alive": 1,
+      "ping_pong_max": 49,
+      "ping_pong_count": 107,
+      "bomb_metrics": {
+        "events": [
+          {
+            "step": 140,
+            "pos": [
+              11,
+              8
+            ],
+            "timer": 6,
+            "radius": 3,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [],
+            "value": 0
+          },
+          {
+            "step": 152,
+            "pos": [
+              9,
+              5
+            ],
+            "timer": 6,
+            "radius": 3,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              3
+            ],
+            "value": 1
+          },
+          {
+            "step": 159,
+            "pos": [
+              7,
+              9
+            ],
+            "timer": 6,
+            "radius": 3,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              3
+            ],
+            "value": 1
+          },
+          {
+            "step": 174,
+            "pos": [
+              9,
+              5
+            ],
+            "timer": 6,
+            "radius": 3,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [],
+            "value": 0
+          },
+          {
+            "step": 183,
+            "pos": [
+              9,
+              3
+            ],
+            "timer": 6,
+            "radius": 3,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              3
+            ],
+            "value": 1
+          },
+          {
+            "step": 194,
+            "pos": [
+              5,
+              9
+            ],
+            "timer": 6,
+            "radius": 3,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [],
+            "value": 0
+          },
+          {
+            "step": 204,
+            "pos": [
+              10,
+              11
+            ],
+            "timer": 6,
+            "radius": 3,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [],
+            "value": 0
+          },
+          {
+            "step": 222,
+            "pos": [
+              7,
+              9
+            ],
+            "timer": 6,
+            "radius": 4,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              3
+            ],
+            "value": 1
+          },
+          {
+            "step": 229,
+            "pos": [
+              9,
+              7
+            ],
+            "timer": 6,
+            "radius": 4,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              3
+            ],
+            "value": 1
+          },
+          {
+            "step": 250,
+            "pos": [
+              9,
+              5
+            ],
+            "timer": 6,
+            "radius": 4,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              3
+            ],
+            "value": 1
+          },
+          {
+            "step": 273,
+            "pos": [
+              9,
+              7
+            ],
+            "timer": 6,
+            "radius": 4,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              3
+            ],
+            "value": 1
+          },
+          {
+            "step": 290,
+            "pos": [
+              7,
+              9
+            ],
+            "timer": 6,
+            "radius": 4,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [],
+            "value": 0
+          },
+          {
+            "step": 303,
+            "pos": [
+              5,
+              7
+            ],
+            "timer": 6,
+            "radius": 5,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              0,
+              2
+            ],
+            "value": 2
+          },
+          {
+            "step": 396,
+            "pos": [
+              9,
+              5
+            ],
+            "timer": 6,
+            "radius": 5,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [],
+            "value": 0
+          },
+          {
+            "step": 406,
+            "pos": [
+              7,
+              9
+            ],
+            "timer": 6,
+            "radius": 5,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [],
+            "value": 0
+          },
+          {
+            "step": 433,
+            "pos": [
+              5,
+              9
+            ],
+            "timer": 6,
+            "radius": 5,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [
+              3
+            ],
+            "value": 1
+          },
+          {
+            "step": 442,
+            "pos": [
+              3,
+              9
+            ],
+            "timer": 6,
+            "radius": 5,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [],
+            "value": 0
+          },
+          {
+            "step": 477,
+            "pos": [
+              5,
+              5
+            ],
+            "timer": 6,
+            "radius": 5,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [],
+            "value": 0
+          },
+          {
+            "step": 499,
+            "pos": [
+              11,
+              9
+            ],
+            "timer": 6,
+            "radius": 5,
+            "target_boxes": 0,
+            "destroyed_boxes": 0,
+            "enemies_in_blast": [],
+            "value": 0
+          }
+        ],
+        "own_bombs_observed": 19,
+        "useful_bombs": 9,
+        "no_value_bombs": 10,
+        "destroyed_boxes_proxy": 0,
+        "burst_pairs_le_3_steps": 0
+      },
+      "death": {
+        "class": "survived",
+        "exploding_bombs": [],
+        "reason": "Agent sống đến hết trận."
+      },
+      "death_timeline": [],
+      "safety_replay": {
+        "available": true,
+        "error": null,
+        "checked_actions": 500,
+        "unsafe_actions": 0,
+        "shield_changes": 0,
+        "examples": []
+      },
+      "runtime": {
+        "timeouts": 0,
+        "errors": 0,
+        "invalid_actions": 0,
+        "fallback_uses": 0
+      },
+      "issues": [
+        "ping_pong_loop",
+        "low_value_bombs",
+        "step500_tiebreak_weak"
+      ]
+    },
+    {
+      "file": "match_20260601_094632_609286.json",
+      "seed": 609286,
+      "has_target": true,
+      "player_index": 3,
+      "rank": 1,
+      "survival_steps": 500,
+      "death_step": null,
+      "final_alive": true,
+      "action_counts": {
+        "STOP": 300,
+        "LEFT": 94,
+        "RIGHT": 92,
+        "UP": 5,
+        "DOWN": 7,
+        "PLACE_BOMB": 2
+      },
+      "phase_metrics": {
+        "early": {
+          "actions": {
+            "STOP": 45,
+            "LEFT": 49,
+            "RIGHT": 45,
+            "UP": 2,
+            "DOWN": 6,
+            "PLACE_BOMB": 2
+          },
+          "steps_alive": 150,
+          "unique_cells": 17,
+          "bombs": 2,
+          "stop_streak_max": 23
+        },
+        "mid": {
+          "actions": {
+            "STOP": 104,
+            "LEFT": 45,
+            "RIGHT": 47,
+            "UP": 3,
+            "DOWN": 1,
+            "PLACE_BOMB": 0
+          },
+          "steps_alive": 200,
+          "unique_cells": 9,
+          "bombs": 0,
+          "stop_streak_max": 104
+        },
+        "late": {
+          "actions": {
+            "STOP": 151,
+            "LEFT": 0,
+            "RIGHT": 0,
+            "UP": 0,
+            "DOWN": 0,
+            "PLACE_BOMB": 0
+          },
+          "steps_alive": 151,
+          "unique_cells": 1,
+          "bombs": 0,
+          "stop_streak_max": 255
+        }
+      },
+      "max_stop_streak": 255,
+      "bomb_steps": [
+        82,
+        99
+      ],
+      "bomb_count": 2,
+      "unique_cells_while_alive": 19,
+      "mobility_rate": 0.038,
+      "last_alive_pos": [
+        9,
+        3
+      ],
+      "start_radius": 1,
+      "max_radius": 4,
+      "end_radius": 4,
+      "start_bombs_left": 1,
+      "max_bombs_left": 3,
+      "end_bombs_left": 3,
+      "start_boxes": 23,
+      "end_boxes_while_alive": 4,
+      "start_items": 0,
+      "end_items_while_alive": 8,
+      "ping_pong_max": 38,
+      "ping_pong_count": 118,
+      "bomb_metrics": {
+        "events": [
+          {
+            "step": 82,
+            "pos": [
+              7,
+              5
+            ],
+            "timer": 6,
+            "radius": 3,
+            "target_boxes": 3,
+            "destroyed_boxes": 3,
+            "enemies_in_blast": [],
+            "value": 3
+          },
+          {
+            "step": 99,
+            "pos": [
+              7,
+              7
+            ],
+            "timer": 6,
+            "radius": 3,
+            "target_boxes": 2,
+            "destroyed_boxes": 2,
+            "enemies_in_blast": [
+              0
+            ],
+            "value": 3
+          }
+        ],
+        "own_bombs_observed": 2,
+        "useful_bombs": 2,
+        "no_value_bombs": 0,
+        "destroyed_boxes_proxy": 5,
+        "burst_pairs_le_3_steps": 0
+      },
+      "death": {
+        "class": "survived",
+        "exploding_bombs": [],
+        "reason": "Agent sống đến hết trận."
+      },
+      "death_timeline": [],
+      "safety_replay": {
+        "available": true,
+        "error": null,
+        "checked_actions": 500,
+        "unsafe_actions": 0,
+        "shield_changes": 0,
+        "examples": []
+      },
+      "runtime": {
+        "timeouts": 0,
+        "errors": 0,
+        "invalid_actions": 0,
+        "fallback_uses": 0
+      },
+      "issues": [
+        "long_stop_streak",
+        "ping_pong_loop",
+        "low_mobility",
+        "bomb_underuse"
+      ]
+    }
+  ]
+}
