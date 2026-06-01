@@ -28,8 +28,12 @@ def final_shield(action: int, state: GameState, danger_time: np.ndarray | None =
 
     mask = safe_actions(state, danger_time)
     if mask.any():
-        return best_escape_action(state, mask, danger_time)
-    return least_bad_action(state, danger_time)
+        chosen = best_escape_action(state, mask, danger_time)
+    else:
+        chosen = least_bad_action(state, danger_time)
+
+    # Final invariant: never hand the engine an out-of-range action.
+    return chosen if chosen in ACTIONS else STOP
 
 
 def best_escape_action(state: GameState, mask: np.ndarray, danger_time: np.ndarray) -> int:

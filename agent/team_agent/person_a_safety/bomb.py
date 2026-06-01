@@ -25,4 +25,10 @@ def can_place_bomb_safely(state: GameState, horizon: int = HORIZON) -> bool:
 
     simulated = copy_state_with_new_bomb_at_self(state)
     danger_time = compute_danger_map(simulated, horizon)
-    return has_escape_path(simulated, state.self_pos, danger_time, horizon)
+    # Placing a bomb consumes a full turn during which the agent CANNOT move:
+    # it stays on its own cell while every existing bomb ticks down once. So the
+    # escape search must start at t=1 (the first real move happens next step),
+    # exactly like the post-move escape check. Starting at t=0 hands the agent a
+    # phantom extra step of budget and was letting it bury itself next to its
+    # own large-radius bombs (engine-verified self-destruct).
+    return has_escape_path(simulated, state.self_pos, danger_time, horizon, start_time=1)

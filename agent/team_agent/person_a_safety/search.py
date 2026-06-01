@@ -49,14 +49,22 @@ def time_expanded_bfs(
     start: Cell,
     danger_time: np.ndarray,
     horizon: int = HORIZON,
+    start_time: int = 0,
 ) -> BFSResult:
-    """BFS over (cell, t), allowing wait/move while avoiding timed fire."""
+    """BFS over (cell, t), allowing wait/move while avoiding timed fire.
 
-    queue = deque([(start, 0)])
-    visited = {(start, 0)}
+    ``start_time`` is the move-frame clock value already elapsed at ``start``.
+    It must be 1 when ``start`` is the cell reached AFTER a move action: getting
+    there has already consumed one step, so the agent has one fewer step of
+    escape budget than ``danger_time`` (computed in the original frame) suggests.
+    Starting the BFS at t=0 in that case is an unsafe off-by-one.
+    """
+
+    queue = deque([(start, start_time)])
+    visited = {(start, start_time)}
     parent: dict[tuple[Cell, int], tuple[Cell, int]] = {}
-    first_action: dict[tuple[Cell, int], int] = {(start, 0): STOP}
-    distances: dict[Cell, int] = {start: 0}
+    first_action: dict[tuple[Cell, int], int] = {(start, start_time): STOP}
+    distances: dict[Cell, int] = {start: start_time}
     safe_targets: list[tuple[Cell, int]] = []
 
     while queue:
@@ -79,7 +87,7 @@ def time_expanded_bfs(
                 continue
             visited.add(node)
             parent[node] = (cell, t)
-            first_action[node] = action if t == 0 else first_action[(cell, t)]
+            first_action[node] = action if t == start_time else first_action[(cell, t)]
             distances[nxt] = min(nt, distances.get(nxt, nt))
             queue.append(node)
 
@@ -96,13 +104,16 @@ def has_escape_path(
     start: Cell | None,
     danger_time: np.ndarray,
     horizon: int = HORIZON,
+    start_time: int = 0,
 ) -> bool:
     start = state.self_pos if start is None else start
     if not passable(state, start, allow_start=start):
         return False
-    if not safe_at(start, 0, danger_time):
+    if not safe_at(start, start_time, danger_time):
         return False
-    return bool(time_expanded_bfs(state, start, danger_time, horizon).safe_targets)
+    return bool(
+        time_expanded_bfs(state, start, danger_time, horizon, start_time).safe_targets
+    )
 
 
 def safe_distances(
@@ -110,6 +121,7 @@ def safe_distances(
     danger_time: np.ndarray,
     start: Cell | None = None,
     horizon: int = HORIZON,
+    start_time: int = 0,
 ) -> dict[Cell, int]:
     start = state.self_pos if start is None else start
-    return time_expanded_bfs(state, start, danger_time, horizon).distances
+    return time_expanded_bfs(state, start, danger_time, horizon, start_time).distances

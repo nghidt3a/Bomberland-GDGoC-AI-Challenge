@@ -9,6 +9,14 @@ def in_bounds(shape: tuple[int, int], cell: Cell) -> bool:
 
 
 def bomb_radius(state: GameState, bomb: BombInfo) -> int:
+    """Estimate a bomb's blast radius.
+
+    The engine locks a bomb's radius at placement time and the observation does
+    NOT expose it (obs bombs are [x, y, timer, owner_id]). We therefore infer it
+    from the owner's CURRENT radius bonus. If the owner picked up a radius item
+    after placing the bomb, this over-estimates the blast — which is a deliberate
+    bias toward safety (we treat more cells as dangerous, never fewer).
+    """
     if 0 <= bomb.owner_id < len(state.players):
         return max(1, min(MAX_BOMB_RADIUS, 1 + int(state.players[bomb.owner_id][4])))
     return 1
@@ -36,7 +44,13 @@ def blast_cells(pos: Cell, radius: int, walls: np.ndarray, boxes: np.ndarray) ->
 
 
 def compute_explosion_times(state: GameState) -> list[int]:
-    """Apply simple fixpoint chain reaction over current bombs."""
+    """Apply simple fixpoint chain reaction over current bombs.
+
+    Blast cells are computed against the CURRENT grid; we do not model boxes
+    destroyed by an earlier blast extending a later one. This is a safe
+    approximation for a danger map (it never shrinks the danger horizon in a way
+    that matters for escaping the bombs already on the field).
+    """
 
     times = [max(0, int(bomb.timer)) for bomb in state.bombs]
     changed = True

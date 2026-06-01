@@ -40,7 +40,10 @@ def has_escape_after_action(state: GameState, action: int, danger_time: np.ndarr
     if action == PLACE_BOMB:
         return can_place_bomb_safely(state)
     next_state = replace(state, self_pos=nxt)
-    return has_escape_path(next_state, nxt, danger_time)
+    # The move already consumed one step, so the escape BFS must start at t=1:
+    # danger_time is in the original ("now") frame and the agent now has one
+    # fewer step of budget. Starting at t=0 here would be an unsafe off-by-one.
+    return has_escape_path(next_state, nxt, danger_time, start_time=1)
 
 
 def safe_actions(state: GameState, danger_time: np.ndarray | None = None) -> np.ndarray:
