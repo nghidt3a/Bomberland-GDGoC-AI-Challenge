@@ -1,5 +1,5 @@
 from person_a_safety.constants import STOP
-from person_a_safety.danger import compute_danger_map
+from person_a_safety.danger import compute_hazard_map
 from person_a_safety.masks import safe_actions
 from person_a_safety.obs import parse_obs
 from person_a_safety.shield import final_shield
@@ -18,9 +18,9 @@ class Agent:
     def act(self, obs: dict) -> int:
         try:
             state = parse_obs(obs, self.agent_id)
-            danger_time = compute_danger_map(state)
-            mask = safe_actions(state, danger_time)
-            raw_action = self.policy.choose_action(state, mask, danger_time)
-            return int(final_shield(raw_action, state, danger_time))
+            hazard = compute_hazard_map(state)
+            mask = safe_actions(state, hazard)
+            raw_action = self.policy.choose_action(state, mask, hazard)
+            return int(final_shield(raw_action, state, hazard, mask))
         except Exception:
             return STOP

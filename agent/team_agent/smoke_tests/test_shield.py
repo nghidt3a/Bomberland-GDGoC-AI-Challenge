@@ -2,7 +2,7 @@
 
 from grid_helpers import empty_grid, make_obs, make_player
 from person_a_safety.constants import ACTIONS, DOWN, PLACE_BOMB, STOP, UP
-from person_a_safety.danger import compute_danger_map
+from person_a_safety.danger import compute_hazard_map
 from person_a_safety.masks import safe_actions
 from person_a_safety.obs import parse_obs
 from person_a_safety.shield import best_escape_action, final_shield
@@ -19,19 +19,19 @@ def four(p0):
 def test_safe_action_passes_through_unchanged():
     grid = empty_grid()
     state = _state(grid, four(make_player(6, 6, bombs_left=1)))
-    danger = compute_danger_map(state)
-    assert safe_actions(state, danger)[UP]
-    assert final_shield(UP, state, danger) == UP
+    hazard = compute_hazard_map(state)
+    assert safe_actions(state, hazard)[UP]
+    assert final_shield(UP, state, hazard) == UP
 
 
 def test_unsafe_move_is_overridden_to_a_safe_one():
     grid = empty_grid()
     p0 = make_player(6, 6, bombs_left=1, radius_bonus=1)
     state = _state(grid, four(p0), bombs=[[6, 9, 1, 0]])  # DOWN -> (6,7) on fire
-    danger = compute_danger_map(state)
-    chosen = final_shield(DOWN, state, danger)  # B insists on the unsafe move
+    hazard = compute_hazard_map(state)
+    chosen = final_shield(DOWN, state, hazard)  # B insists on the unsafe move
     assert chosen in ACTIONS
-    assert safe_actions(state, danger)[chosen]  # replaced by an actually-safe action
+    assert safe_actions(state, hazard)[chosen]  # replaced by an actually-safe action
 
 
 def test_unsafe_bomb_is_overridden():
@@ -59,11 +59,11 @@ def test_shield_does_not_use_bomb_as_escape_fallback():
 
     grid = empty_grid()
     state = _state(grid, four(make_player(5, 1, bombs_left=1)))
-    danger = compute_danger_map(state)
+    hazard = compute_hazard_map(state)
     mask = np.zeros(len(ACTIONS), dtype=bool)
     mask[PLACE_BOMB] = True
 
-    assert best_escape_action(state, mask, danger) is None
+    assert best_escape_action(state, mask, hazard) is None
 
 
 def test_dead_agent_returns_stop():

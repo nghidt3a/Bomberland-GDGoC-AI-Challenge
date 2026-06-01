@@ -8,7 +8,7 @@ class BehaviorCloningPolicy:
         self.model_path = model_path
         self.model = None
 
-    def choose_action(self, state, safe_mask, danger_time) -> int:
+    def choose_action(self, state, safe_mask, hazard) -> int:
         return first_safe_action(safe_mask)
 
 

@@ -4,7 +4,7 @@ import numpy as np
 
 from grid_helpers import empty_grid, make_obs, make_player
 from person_a_safety.constants import BOX, ITEM_RADIUS, WALL
-from person_a_safety.danger import blast_cells, compute_danger_map
+from person_a_safety.danger import blast_cells, compute_danger_map, compute_hazard_map
 from person_a_safety.obs import parse_obs
 
 
@@ -94,3 +94,31 @@ def test_no_bombs_is_all_safe():
     state = _state(grid, bombs=[])
     danger = compute_danger_map(state)
     assert np.all(danger > 1000)
+
+
+# --- box removal extends a later blast (per-time hazard simulation) --------
+
+def test_box_removed_early_extends_a_later_blast():
+    """A box destroyed by an early bomb must let a LATER bomb blast through the
+    gap. The old static-grid danger map kept the box standing forever and so
+    under-reported the danger behind it."""
+
+    grid = empty_grid()
+    grid[5, 5] = BOX
+    players = [
+        make_player(1, 1, radius_bonus=2),  # all bombs owner 0 -> radius 3
+        make_player(1, 11),
+        make_player(11, 11),
+        make_player(11, 1),
+    ]
+    # A (above) detonates at t=2 and clears the box at (5,5) without touching (5,4).
+    # B (right) detonates at t=6; only once the box is gone can its radius-3 left
+    # arm reach (5,4).
+    bombs = [[3, 5, 2, 0], [5, 7, 6, 0]]
+    state = parse_obs(make_obs(grid, players, bombs=bombs), agent_id=0)
+
+    hazard = compute_hazard_map(state)
+    assert hazard[2, 5, 5]          # box burns at t=2 (bomb A)
+    assert hazard[6, 5, 4]          # (5,4) reached by B at t=6 through the cleared box
+    danger = compute_danger_map(state)
+    assert danger[5, 4] == 6        # A never touched (5,4); B reaches it only later

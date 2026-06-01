@@ -10,7 +10,7 @@ if str(TEAM_DIR) not in sys.path:
     sys.path.insert(0, str(TEAM_DIR))
 
 from person_a_safety.constants import BOX, GRASS, ITEM_RADIUS, WALL
-from person_a_safety.danger import blast_cells, compute_danger_map
+from person_a_safety.danger import blast_cells, compute_danger_map, compute_hazard_map
 from person_a_safety.masks import safe_actions
 from person_a_safety.obs import parse_obs
 
@@ -57,7 +57,7 @@ def test_blast_cells_stop_at_box():
 
 def test_safe_actions_shape():
     state = parse_obs(make_obs(), agent_id=0)
-    mask = safe_actions(state, compute_danger_map(state))
+    mask = safe_actions(state, compute_hazard_map(state))
 
     assert mask.shape == (6,)
     assert mask.dtype == bool

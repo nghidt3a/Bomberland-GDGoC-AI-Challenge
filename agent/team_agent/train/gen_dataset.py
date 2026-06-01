@@ -22,7 +22,7 @@ def collect_rule_samples(
 ) -> dict[str, np.ndarray]:
     from agent import Agent
     from engine.game import BomberEnv
-    from person_a_safety.danger import compute_danger_map
+    from person_a_safety.danger import compute_hazard_map
     from person_a_safety.features import encode_features
     from person_a_safety.masks import safe_actions
     from person_a_safety.obs import parse_obs
@@ -49,15 +49,15 @@ def collect_rule_samples(
 
             for agent_id, agent in enumerate(agents):
                 state = parse_obs(obs, agent_id)
-                danger_time = compute_danger_map(state)
-                mask = safe_actions(state, danger_time)
+                hazard = compute_hazard_map(state)
+                mask = safe_actions(state, hazard)
                 action = int(agent.act(obs))
                 actions.append(action)
 
                 if not state.self_alive:
                     continue
 
-                step_features.append(encode_features(state, danger_time))
+                step_features.append(encode_features(state, hazard))
                 step_masks.append(mask.astype(np.bool_))
                 teacher_actions.append(action)
                 agent_ids.append(agent_id)

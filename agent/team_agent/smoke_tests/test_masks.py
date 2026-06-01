@@ -2,7 +2,7 @@
 
 from grid_helpers import empty_grid, make_obs, make_player
 from person_a_safety.constants import BOX, DOWN, LEFT, PLACE_BOMB, RIGHT, STOP, UP
-from person_a_safety.danger import compute_danger_map
+from person_a_safety.danger import compute_danger_map, compute_hazard_map
 from person_a_safety.masks import legal_actions, safe_actions
 from person_a_safety.obs import parse_obs
 
@@ -61,6 +61,6 @@ def test_safe_actions_filter_move_into_fire():
     state = _state(grid, four(p0), bombs=[[6, 9, 1, 0]])
     danger = compute_danger_map(state)
     assert danger[6, 7] == 1  # explodes next step
-    mask = safe_actions(state, danger)
+    mask = safe_actions(state, compute_hazard_map(state))
     assert not mask[DOWN]  # DOWN -> (6,7) is on fire at t=1
     assert mask[UP] or mask[LEFT] or mask[RIGHT]  # escape directions remain

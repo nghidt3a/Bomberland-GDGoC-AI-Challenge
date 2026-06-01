@@ -2,7 +2,7 @@ import numpy as np
 
 from grid_helpers import empty_grid, make_obs, make_player
 from person_a_safety.constants import BOX, ITEM_CAPACITY, ITEM_RADIUS, WALL
-from person_a_safety.danger import compute_danger_map
+from person_a_safety.danger import compute_hazard_map
 from person_a_safety.features import FEATURE_CHANNELS, encode_features
 from person_a_safety.obs import parse_obs
 
@@ -38,7 +38,7 @@ def test_feature_channels_mark_core_entities():
     grid[6, 6] = ITEM_CAPACITY
     obs = make_obs(grid, players(), bombs=[[5, 7, 4, 0]])
     state = parse_obs(obs, agent_id=0)
-    features = encode_features(state, compute_danger_map(state))
+    features = encode_features(state, compute_hazard_map(state))
     channel = {name: idx for idx, name in enumerate(FEATURE_CHANNELS)}
 
     assert features[channel["wall"], 0, 0] == 1.0

@@ -372,7 +372,7 @@ def analyze_bombs(history: list[dict[str, Any]], player_idx: int) -> dict[str, A
 
 def safety_replay(history: list[dict[str, Any]], player_idx: int) -> dict[str, Any]:
     try:
-        from person_a_safety.danger import compute_danger_map
+        from person_a_safety.danger import compute_hazard_map
         from person_a_safety.masks import safe_actions
         from person_a_safety.obs import parse_obs
         from person_a_safety.shield import final_shield
@@ -406,9 +406,9 @@ def safety_replay(history: list[dict[str, Any]], player_idx: int) -> dict[str, A
         }
         try:
             state = parse_obs(obs, player_idx)
-            danger_time = compute_danger_map(state)
-            mask = safe_actions(state, danger_time)
-            shielded = int(final_shield(action, state, danger_time))
+            hazard = compute_hazard_map(state)
+            mask = safe_actions(state, hazard)
+            shielded = int(final_shield(action, state, hazard))
         except Exception as exc:
             return {
                 "available": False,

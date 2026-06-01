@@ -17,14 +17,16 @@ from person_a_safety.constants import (
     ITEM_RADIUS,
     PLACE_BOMB,
     RIGHT,
+    STOP,
     WALL,
 )
-from person_a_safety.danger import compute_danger_map
+from person_a_safety.danger import compute_hazard_map
 from person_a_safety.obs import parse_obs
 from person_b_strategy.loop_tracker import AntiLoopTracker
 from person_b_strategy.scoring import (
     bomb_escape_quality,
     box_gain,
+    box_move_score,
     farm_targets,
     item_value,
     phase_profile,
@@ -60,11 +62,11 @@ def make_state(grid=None, self_pos=(5, 5), bombs_left=1, radius_bonus=2, opponen
 
 def test_score_actions_never_scores_unsafe_action():
     state = make_state()
-    danger = compute_danger_map(state)
+    hazard = compute_hazard_map(state)
     safe_mask = np.zeros(6, dtype=bool)
     safe_mask[RIGHT] = True
 
-    scores = score_actions(state, safe_mask, danger)
+    scores = score_actions(state, safe_mask, hazard)
 
     assert scores[RIGHT] > -inf
     assert all(score == -inf for action, score in scores.items() if action != RIGHT)
@@ -112,14 +114,26 @@ def test_item_value_tracks_radius_and_capacity_needs():
 
 def test_useless_bomb_is_penalized():
     state = make_state()
-    danger = compute_danger_map(state)
+    hazard = compute_hazard_map(state)
 
-    components = score_action_components(state, PLACE_BOMB, danger)
+    components = score_action_components(state, PLACE_BOMB, hazard)
 
     assert components["box_bomb"] == 0
     assert components["pressure"] == 0
     assert components["bomb_escape_quality"] == 0
     assert components["useless_bomb_penalty"] < 0
+
+
+def test_stop_not_rewarded_as_farm():
+    # Standing next to boxes whose blast our radius would clear must NOT credit
+    # STOP with box-farming value; only PLACE_BOMB destroys boxes.
+    grid = make_grid()
+    grid[5, 6] = BOX
+    grid[5, 7] = BOX
+    state = make_state(grid=grid, self_pos=(5, 5), radius_bonus=4)
+
+    assert box_gain(state, (5, 5)) > 0  # the cell's blast does cover boxes
+    assert box_move_score(state, STOP, (5, 5), (), {}, {}) == 0.0
 
 
 def test_bomb_escape_quality_requires_permanent_escape_cell():

@@ -1,7 +1,7 @@
 import numpy as np
 
 from .constants import BOMB_TIMER, INF
-from .danger import compute_danger_map
+from .danger import compute_hazard_map, hazard_to_earliest
 from .search import time_expanded_bfs
 from .state import GameState
 
@@ -20,13 +20,18 @@ FEATURE_CHANNELS: tuple[str, ...] = (
 )
 
 
-def encode_features(state: GameState, danger_time: np.ndarray | None = None) -> np.ndarray:
-    """Starter feature encoder for optional BC/PPO work."""
+def encode_features(state: GameState, hazard: np.ndarray | None = None) -> np.ndarray:
+    """Starter feature encoder for optional BC/PPO work.
 
-    danger_time = compute_danger_map(state) if danger_time is None else danger_time
+    ``hazard`` is the per-time tensor from :func:`compute_hazard_map`; the
+    danger channel is its collapsed earliest-burn map.
+    """
+
+    hazard = compute_hazard_map(state) if hazard is None else hazard
+    danger_time = hazard_to_earliest(hazard)
     danger_norm = np.where(danger_time >= INF, 0.0, 1.0 / np.maximum(1.0, danger_time)).astype(np.float32)
     bomb_timer_norm = _bomb_timer_channel(state)
-    safe_reachable = _safe_reachable_channel(state, danger_time)
+    safe_reachable = _safe_reachable_channel(state, hazard)
 
     channels = [
         state.walls.astype(np.float32),
@@ -69,10 +74,10 @@ def _bomb_timer_channel(state: GameState) -> np.ndarray:
     return arr
 
 
-def _safe_reachable_channel(state: GameState, danger_time: np.ndarray) -> np.ndarray:
+def _safe_reachable_channel(state: GameState, hazard: np.ndarray) -> np.ndarray:
     arr = np.zeros(state.grid.shape, dtype=np.float32)
     if not state.self_alive:
         return arr
-    for cell in time_expanded_bfs(state, state.self_pos, danger_time).distances:
+    for cell in time_expanded_bfs(state, state.self_pos, hazard).distances:
         arr[cell] = 1.0
     return arr
