@@ -5,7 +5,7 @@ from person_a_safety.constants import ACTIONS, DOWN, PLACE_BOMB, STOP, UP
 from person_a_safety.danger import compute_danger_map
 from person_a_safety.masks import safe_actions
 from person_a_safety.obs import parse_obs
-from person_a_safety.shield import final_shield
+from person_a_safety.shield import best_escape_action, final_shield
 
 
 def _state(grid, players, bombs=None, agent_id=0):
@@ -52,6 +52,18 @@ def test_invalid_action_is_sanitised():
     state = _state(grid, four(make_player(6, 6, bombs_left=1)))
     assert final_shield(99, state) in ACTIONS
     assert final_shield(-1, state) in ACTIONS
+
+
+def test_shield_does_not_use_bomb_as_escape_fallback():
+    import numpy as np
+
+    grid = empty_grid()
+    state = _state(grid, four(make_player(5, 1, bombs_left=1)))
+    danger = compute_danger_map(state)
+    mask = np.zeros(len(ACTIONS), dtype=bool)
+    mask[PLACE_BOMB] = True
+
+    assert best_escape_action(state, mask, danger) is None
 
 
 def test_dead_agent_returns_stop():

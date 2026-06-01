@@ -88,30 +88,30 @@ class AntiLoopTracker:
         penalty = 0.0
 
         if action == STOP:
-            penalty += 3.0
-            penalty += 0.9 * sum(1 for recent_action in recent_actions[-5:] if recent_action == STOP)
+            penalty += 5.0
+            penalty += 1.8 * sum(1 for recent_action in recent_actions[-5:] if recent_action == STOP)
 
         if recent_positions and next_pos == recent_positions[-1]:
-            penalty += 1.5
+            penalty += 2.5
 
         if len(recent_positions) >= 2 and next_pos == recent_positions[-2]:
-            penalty += 4.5
+            penalty += 8.0
 
         if len(recent_positions) >= 4 and recent_positions[-1] == recent_positions[-3]:
             if next_pos == recent_positions[-2]:
-                penalty += 6.0
+                penalty += 10.0
 
-        penalty += 0.45 * sum(1 for pos in recent_positions if pos == next_pos)
+        penalty += 0.7 * sum(1 for pos in recent_positions if pos == next_pos)
 
         window = recent_positions[-8:]
         if len(window) >= 6 and len(set(window)) <= 3 and next_pos in window:
-            penalty += 3.0
+            penalty += 5.0
 
         if self.steps_without_progress >= 12:
             if action == STOP:
-                penalty += 5.0
+                penalty += 10.0
             if next_pos in recent_positions[-6:]:
-                penalty += 2.0
+                penalty += 4.0
 
         return penalty
 

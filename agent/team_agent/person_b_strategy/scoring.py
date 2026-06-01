@@ -11,6 +11,8 @@ from person_a_safety.constants import (
     PLACE_BOMB,
     STOP,
 )
+from person_a_safety.bomb import copy_state_with_new_bomb_at_self
+from person_a_safety.danger import compute_danger_map
 from person_a_safety.danger import blast_cells
 from person_a_safety.masks import action_destination
 from person_a_safety.search import passable, time_expanded_bfs
@@ -26,9 +28,9 @@ class ScoreWeights:
     pressure: float = 12.0
     mobility: float = 4.0
     danger: float = 12.0
-    loop: float = 2.5
+    loop: float = 3.2
     useless_bomb: float = 58.0
-    stop: float = 5.0
+    stop: float = 7.0
 
 
 @dataclass(frozen=True)
@@ -162,6 +164,7 @@ def score_action_components(
     next_distances = context.next_distances.get(action, distances)
     pressure_raw = pressure_score(state, action, turn_index=turn_index)
     gain_here = box_gain(state)
+    escape_quality = bomb_escape_quality(state) if action == PLACE_BOMB else 0.0
 
     components = {
         "survival": weights.survival * survival_score(next_pos, danger_time),
@@ -172,6 +175,7 @@ def score_action_components(
         * item_move_score(state, action, next_pos, context.item_targets, next_distances, context.first_actions),
         "pressure": weights.pressure * pressure_raw,
         "mobility": weights.mobility * mobility_score(state, next_pos),
+        "bomb_escape_quality": 0.0,
         "danger_penalty": -weights.danger * danger_penalty(next_pos, danger_time),
         "loop_penalty": 0.0,
         "stop_penalty": -weights.stop if action == STOP else 0.0,
@@ -184,6 +188,12 @@ def score_action_components(
             turn_index=turn_index,
         ),
     }
+
+    if action == PLACE_BOMB:
+        if escape_quality <= 0.0:
+            components["useless_bomb_penalty"] -= weights.useless_bomb
+        elif gain_here > 0 or pressure_raw > 0:
+            components["bomb_escape_quality"] = weights.survival * min(0.75, escape_quality)
 
     apply_escape_bias(components, state, action, next_pos, danger_time, weights)
 
@@ -238,9 +248,9 @@ def phase_profile(turn_index: int, tracker=None) -> PhaseProfile:
                 pressure=2.0,
                 mobility=4.0,
                 danger=12.0,
-                loop=2.4,
+                loop=3.4,
                 useless_bomb=92.0,
-                stop=5.5,
+                stop=8.0,
             ),
         )
 
@@ -255,9 +265,9 @@ def phase_profile(turn_index: int, tracker=None) -> PhaseProfile:
                 pressure=6.0,
                 mobility=4.5,
                 danger=12.0,
-                loop=2.5,
+                loop=3.2,
                 useless_bomb=86.0,
-                stop=5.0,
+                stop=7.0,
             ),
         )
 
@@ -273,9 +283,9 @@ def phase_profile(turn_index: int, tracker=None) -> PhaseProfile:
                 pressure=6.0,
                 mobility=6.0,
                 danger=16.0,
-                loop=2.2,
+                loop=3.0,
                 useless_bomb=92.0,
-                stop=4.0,
+                stop=6.0,
             ),
         )
 
@@ -289,9 +299,9 @@ def phase_profile(turn_index: int, tracker=None) -> PhaseProfile:
             pressure=14.0,
             mobility=5.0,
             danger=13.0,
-            loop=2.7,
+            loop=3.5,
             useless_bomb=78.0,
-            stop=6.0,
+            stop=8.5,
         ),
     )
 
@@ -418,6 +428,28 @@ def box_bomb_score(action: int, gain_here: int) -> float:
     if action != PLACE_BOMB or gain_here <= 0:
         return 0.0
     return float(gain_here)
+
+
+def bomb_escape_quality(state: GameState) -> float:
+    if not state.self_alive or state.self_bombs_left <= 0 or state.self_pos in state.bomb_positions:
+        return 0.0
+
+    simulated = copy_state_with_new_bomb_at_self(state)
+    danger_time = compute_danger_map(simulated)
+    bfs = time_expanded_bfs(simulated, simulated.self_pos, danger_time, start_time=1)
+    permanent_targets = [(cell, t) for cell, t in bfs.safe_targets if int(danger_time[cell]) >= INF]
+    if not permanent_targets:
+        return 0.0
+
+    best = 0.0
+    for cell, arrival in permanent_targets:
+        open_count = open_neighbors(simulated, cell)
+        candidate = 1.0 / max(1.0, float(arrival))
+        candidate += 0.18 * open_count
+        if cell == state.self_pos:
+            candidate *= 0.25
+        best = max(best, candidate)
+    return min(2.0, best)
 
 
 def pressure_score(state: GameState, action: int, turn_index: int = 0) -> float:

@@ -3,7 +3,7 @@ import numpy as np
 from .constants import ACTIONS, INF, PLACE_BOMB, STOP
 from .danger import compute_danger_map
 from .masks import action_destination, legal_actions, safe_actions
-from .search import passable
+from .search import first_escape_action, passable
 from .state import Cell, GameState
 
 
@@ -29,6 +29,8 @@ def final_shield(action: int, state: GameState, danger_time: np.ndarray | None =
     mask = safe_actions(state, danger_time)
     if mask.any():
         chosen = best_escape_action(state, mask, danger_time)
+        if chosen is None:
+            chosen = least_bad_action(state, danger_time)
     else:
         chosen = least_bad_action(state, danger_time)
 
@@ -36,12 +38,14 @@ def final_shield(action: int, state: GameState, danger_time: np.ndarray | None =
     return chosen if chosen in ACTIONS else STOP
 
 
-def best_escape_action(state: GameState, mask: np.ndarray, danger_time: np.ndarray) -> int:
+def best_escape_action(state: GameState, mask: np.ndarray, danger_time: np.ndarray) -> int | None:
     candidates = [action for action in ACTIONS if bool(mask[action]) and action != PLACE_BOMB]
     if not candidates:
-        candidates = [action for action in ACTIONS if bool(mask[action])]
-    if not candidates:
-        return STOP
+        return None
+
+    planned = first_escape_action(state, danger_time)
+    if planned in candidates:
+        return int(planned)
 
     return max(candidates, key=lambda action: _escape_score(state, action, danger_time))
 

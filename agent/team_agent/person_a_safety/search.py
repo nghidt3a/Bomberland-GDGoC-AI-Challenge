@@ -125,3 +125,50 @@ def safe_distances(
 ) -> dict[Cell, int]:
     start = state.self_pos if start is None else start
     return time_expanded_bfs(state, start, danger_time, horizon, start_time).distances
+
+
+def safe_relative_distances(
+    state: GameState,
+    danger_time: np.ndarray,
+    start: Cell | None = None,
+    horizon: int = HORIZON,
+    start_time: int = 0,
+) -> dict[Cell, int]:
+    """Return safe travel distances relative to ``start_time``.
+
+    ``safe_distances`` exposes absolute arrival times in the danger map frame.
+    Strategy code that needs ordinary path distances should use this helper.
+    """
+
+    absolute = safe_distances(state, danger_time, start, horizon, start_time)
+    return {cell: max(0, int(arrival) - int(start_time)) for cell, arrival in absolute.items()}
+
+
+def first_escape_action(
+    state: GameState,
+    danger_time: np.ndarray,
+    start: Cell | None = None,
+    horizon: int = HORIZON,
+    start_time: int = 0,
+) -> int | None:
+    """Return the first move toward the nearest safe target, if one exists."""
+
+    start = state.self_pos if start is None else start
+    if not passable(state, start, allow_start=start):
+        return None
+    if not safe_at(start, start_time, danger_time):
+        return None
+
+    result = time_expanded_bfs(state, start, danger_time, horizon, start_time)
+    if not result.safe_targets:
+        return None
+
+    target = min(
+        result.safe_targets,
+        key=lambda item: (
+            int(item[1]),
+            0 if int(danger_time[item[0]]) >= INF else 1,
+            item[0],
+        ),
+    )
+    return int(result.first_action.get(target, STOP))

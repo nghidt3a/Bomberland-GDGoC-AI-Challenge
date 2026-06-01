@@ -1,8 +1,8 @@
 from dataclasses import replace
 
-from .constants import BOMB_TIMER, HORIZON
+from .constants import BOMB_TIMER, HORIZON, INF
 from .danger import compute_danger_map
-from .search import has_escape_path
+from .search import safe_at, time_expanded_bfs
 from .state import BombInfo, GameState
 
 
@@ -31,4 +31,18 @@ def can_place_bomb_safely(state: GameState, horizon: int = HORIZON) -> bool:
     # exactly like the post-move escape check. Starting at t=0 hands the agent a
     # phantom extra step of budget and was letting it bury itself next to its
     # own large-radius bombs (engine-verified self-destruct).
-    return has_escape_path(simulated, state.self_pos, danger_time, horizon, start_time=1)
+    return has_permanent_escape_after_bomb(simulated, danger_time, horizon)
+
+
+def has_permanent_escape_after_bomb(
+    simulated: GameState,
+    danger_time,
+    horizon: int = HORIZON,
+) -> bool:
+    """Require an escape target that does not burn in the current danger model."""
+
+    if not safe_at(simulated.self_pos, 1, danger_time):
+        return False
+
+    bfs = time_expanded_bfs(simulated, simulated.self_pos, danger_time, horizon, start_time=1)
+    return any(int(danger_time[cell]) >= INF for cell, _time in bfs.safe_targets)

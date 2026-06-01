@@ -23,6 +23,7 @@ from person_a_safety.danger import compute_danger_map
 from person_a_safety.obs import parse_obs
 from person_b_strategy.loop_tracker import AntiLoopTracker
 from person_b_strategy.scoring import (
+    bomb_escape_quality,
     box_gain,
     farm_targets,
     item_value,
@@ -117,7 +118,16 @@ def test_useless_bomb_is_penalized():
 
     assert components["box_bomb"] == 0
     assert components["pressure"] == 0
+    assert components["bomb_escape_quality"] == 0
     assert components["useless_bomb_penalty"] < 0
+
+
+def test_bomb_escape_quality_requires_permanent_escape_cell():
+    grid = np.ones((13, 13), dtype=np.int8)
+    grid[5, 1:5] = GRASS
+    state = make_state(grid=grid, self_pos=(5, 2), radius_bonus=4)
+
+    assert bomb_escape_quality(state) == 0.0
 
 
 def test_loop_tracker_penalizes_stop_and_abab_return():
@@ -126,8 +136,8 @@ def test_loop_tracker_penalizes_stop_and_abab_return():
     tracker.update((5, 6), 1)
     tracker.update((5, 5), 2)
 
-    assert tracker.action_penalty((5, 5), 0) > 0
-    assert tracker.action_penalty((5, 6), 1) >= 4.5
+    assert tracker.action_penalty((5, 5), 0) >= 7.0
+    assert tracker.action_penalty((5, 6), 1) >= 8.0
 
 
 def test_phase_profile_changes_weights_by_turn():

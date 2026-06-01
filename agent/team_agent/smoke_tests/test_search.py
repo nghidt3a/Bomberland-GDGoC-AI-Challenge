@@ -10,7 +10,14 @@ from grid_helpers import make_obs, make_player
 from person_a_safety.constants import INF
 from person_a_safety.danger import compute_danger_map
 from person_a_safety.obs import parse_obs
-from person_a_safety.search import eventually_safe, has_escape_path, safe_at
+from person_a_safety.search import (
+    eventually_safe,
+    first_escape_action,
+    has_escape_path,
+    safe_at,
+    safe_distances,
+    safe_relative_distances,
+)
 
 
 def test_safe_at_only_unsafe_at_exact_explosion():
@@ -73,3 +80,33 @@ def test_dead_end_has_no_escape():
     state = parse_obs(obs, agent_id=0)
     danger = compute_danger_map(state)
     assert has_escape_path(state, (5, 1), danger, start_time=0) is False
+
+
+def test_safe_relative_distances_subtract_start_time():
+    state = _single_row_corridor_state(bomb_timer=6, self_col=8)
+    danger = compute_danger_map(state)
+
+    absolute = safe_distances(state, danger, start=(5, 8), start_time=1)
+    relative = safe_relative_distances(state, danger, start=(5, 8), start_time=1)
+
+    assert absolute[(5, 8)] == 1
+    assert relative[(5, 8)] == 0
+    assert relative[(5, 9)] == absolute[(5, 9)] - 1
+
+
+def test_first_escape_action_moves_toward_nearest_safety():
+    state = _single_row_corridor_state(bomb_timer=3, self_col=3)
+    danger = compute_danger_map(state)
+
+    assert first_escape_action(state, danger) == 4  # DOWN moves from col 3 to col 4 in this coordinate frame.
+
+
+def test_first_escape_action_returns_none_when_no_escape():
+    grid = np.ones((13, 13), dtype=np.int8)
+    grid[5, 1] = 0
+    players = [make_player(5, 1)] + [make_player(1, i) for i in (1, 2, 3)]
+    obs = make_obs(grid, players, bombs=[[5, 1, 1, 0]])
+    state = parse_obs(obs, agent_id=0)
+    danger = compute_danger_map(state)
+
+    assert first_escape_action(state, danger) is None

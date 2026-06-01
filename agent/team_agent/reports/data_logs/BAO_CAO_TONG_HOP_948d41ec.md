@@ -2,7 +2,7 @@
 
 - Team id: `948d41ec-3dbd-4840-9ee5-f0d01cc1b6c0`
 - Log dir: `agent\data_logs`
-- Generated at: `2026-06-01 17:31:28`
+- Generated at: `2026-06-01 18:22:40`
 - Số trận có team id: 12/12
 - Average rank: 2.00 (rank càng nhỏ càng tốt)
 - Average survival: 354.5 steps

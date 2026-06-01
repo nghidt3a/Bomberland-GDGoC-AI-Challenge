@@ -48,6 +48,14 @@ def test_placement_step_consumes_a_turn_regression():
     assert can_place_bomb_safely(state) is False
 
 
+def test_cannot_place_when_current_cell_burns_next_step():
+    grid = empty_grid()
+    players = four(make_player(5, 3, bombs_left=1, radius_bonus=4))
+    state = _state(grid, players, bombs=[[5, 5, 1, 0]])
+
+    assert can_place_bomb_safely(state) is False
+
+
 def test_open_area_can_place_safely():
     grid = empty_grid()
     state = _state(grid, four(make_player(6, 6, bombs_left=1)))
