@@ -273,3 +273,65 @@ Nếu PPO không vượt rule rõ ràng, submit rule/BC ổn nhất.
 - Benchmark rank thắng train reward.
 - Version đơn giản thắng version phức tạp nếu metric gần nhau.
 - Nếu một module chưa có test, chưa xem là xong.
+
+## 7. Scaffold code đã tạo
+
+Thư mục làm việc chính:
+
+```text
+agent/team_agent/
+```
+
+Chạy thử agent:
+
+```bash
+python -m scripts.participant.run_local_match --agent_paths agent/team_agent None None None --num_episodes 3 --visualize false
+```
+
+Người A làm trong:
+
+```text
+agent/team_agent/person_a_safety/
+```
+
+Các hàm/API đã có sẵn:
+
+```python
+parse_obs(obs, agent_id)
+compute_danger_map(state)
+blast_cells(pos, radius, walls, boxes)
+time_expanded_bfs(state, start, danger_time)
+legal_actions(state)
+safe_actions(state, danger_time)
+can_place_bomb_safely(state)
+final_shield(action, state, danger_time)
+encode_features(state, danger_time)
+```
+
+Người B làm trong:
+
+```text
+agent/team_agent/person_b_strategy/
+```
+
+Các hàm/class đã có sẵn:
+
+```python
+score_actions(state, safe_mask, danger_time, tracker)
+score_action(state, action, danger_time, distances, tracker)
+box_gain(state, cell)
+item_score(state, pos, distances)
+pressure_score(state, action)
+AntiLoopTracker
+RulePolicy.choose_action(state, safe_mask, danger_time)
+BehaviorCloningPolicy
+PPOPolicy
+```
+
+Thư mục phụ:
+
+```text
+agent/team_agent/bench/benchmark.py
+agent/team_agent/train/gen_dataset.py
+agent/team_agent/smoke_tests/test_scaffold.py
+```
