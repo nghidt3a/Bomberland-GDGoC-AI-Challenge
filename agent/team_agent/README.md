@@ -1,17 +1,19 @@
 # Team A/B agent scaffold
 
-Thu muc nay la scaffold de 2 nguoi lam song song theo `docs/bomberman_agent_guides_md/08_CHIA_TASK_2_NGUOI.md`.
+Thư mục này là scaffold để 2 người làm song song theo `docs/bomberman_agent_guides_md/08_CHIA_TASK_2_NGUOI.md`.
 
-Chay thu:
+File tiếp theo nên đọc: `HUONG_DAN_TIEP_THEO_A_B.md`.
+
+Chạy thử:
 
 ```bash
 python -m scripts.participant.run_local_match --agent_paths agent/team_agent None None None --num_episodes 3 --visualize false
 python -m scripts.participant.estimate_agent_time agent/team_agent --opponents None None None --num_matches 3
 ```
 
-## Nguoi A - Safety/Engine
+## Người A - Safety/Engine
 
-Lam trong `person_a_safety/`:
+Làm trong `person_a_safety/`:
 
 - `constants.py`: action ids, tile ids, horizon.
 - `obs.py`: `parse_obs(obs, agent_id)`.
@@ -20,15 +22,15 @@ Lam trong `person_a_safety/`:
 - `masks.py`: `legal_actions`, `safe_actions`.
 - `bomb.py`: `can_place_bomb_safely`.
 - `shield.py`: `final_shield`.
-- `features.py`: `encode_features` cho BC/PPO sau nay.
+- `features.py`: `encode_features` cho BC/PPO sau này.
 
-## Nguoi B - Strategy/Scoring/ML
+## Người B - Strategy/Scoring/ML
 
-Lam trong `person_b_strategy/`:
+Làm trong `person_b_strategy/`:
 
 - `scoring.py`: farm/item/attack/mobility/loop scoring.
 - `loop_tracker.py`: anti-loop state.
-- `policy_rule.py`: rule policy goi scoring va chi chon trong safe mask.
-- `policy_bc.py`, `policy_ppo.py`: stub cho model inference sau nay.
+- `policy_rule.py`: rule policy gọi scoring và chỉ chọn trong safe mask.
+- `policy_bc.py`, `policy_ppo.py`: stub cho model inference sau này.
 
-Quy tac bat buoc: policy cua B chi de xuat action; action cuoi luon di qua `final_shield`.
+Quy tắc bắt buộc: policy của B chỉ đề xuất action; action cuối luôn đi qua `final_shield`.
