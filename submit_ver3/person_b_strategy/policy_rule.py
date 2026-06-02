@@ -7,20 +7,28 @@ from .scoring import action_progress_value, action_tie_break_score, score_action
 
 
 class RulePolicy:
-    """Rule_v1 policy: score only actions allowed by A's safe mask."""
+    """Rule_v1 policy: score only actions allowed by A's safe mask.
 
-    def __init__(self):
+    ``weights`` overrides the per-phase weight schedule with a single fixed
+    ``ScoreWeights`` for every turn — used by the offline weight tuner
+    (``train/tune_weights.py``); ``None`` keeps the shipped phase profiles.
+    """
+
+    def __init__(self, weights=None):
         self.loop_tracker = AntiLoopTracker()
         self.turn_index = 0
+        self.weights = weights
 
-    def choose_action(self, state, safe_mask, hazard) -> int:
+    def choose_action(self, state, safe_mask, hazard, deadline=None) -> int:
         self.loop_tracker.observe_state(state)
         scores = score_actions(
             state,
             safe_mask,
             hazard,
             tracker=self.loop_tracker,
+            weights=self.weights,
             turn_index=self.turn_index,
+            deadline=deadline,
         )
 
         action = self._best_action(state, scores)

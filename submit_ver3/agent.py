@@ -40,7 +40,7 @@ INF = 10**9
 # --- person_a_safety/state.py ---
 
 from dataclasses import dataclass
-from typing import List, Set, Tuple
+from typing import List, Optional, Set, Tuple
 
 import numpy as np
 
@@ -52,6 +52,12 @@ class BombInfo:
     pos: Cell
     timer: int
     owner_id: int
+    # Blast radius LOCKED at placement time. The observation never exposes it, so
+    # callers that know the true radius (the cross-turn radius tracker) pass it
+    # here; ``None`` means "infer from the owner's current bonus" (see
+    # ``danger.bomb_radius``). Kept last with a default so existing positional
+    # constructions ``BombInfo(pos, timer, owner_id)`` stay valid.
+    radius: Optional[int] = None
 
 
 @dataclass
@@ -87,19 +93,33 @@ import numpy as np
 
 
 
+# NB: named ``danger_in_bounds`` (not ``in_bounds``) on purpose — ``search.py``
+# also defines an ``in_bounds`` with a different signature, and the one-file
+# submission bundle puts both in a single namespace. Distinct names keep the
+# bundle correct; ``scripts/participant/build_team_bundle.py`` also fails the
+# build if two bundled modules ever export the same top-level name.
 def danger_in_bounds(shape: tuple[int, int], cell: Cell) -> bool:
     return 0 <= cell[0] < shape[0] and 0 <= cell[1] < shape[1]
 
 
 def bomb_radius(state: GameState, bomb: BombInfo) -> int:
-    """Estimate a bomb's blast radius.
+    """Return a bomb's blast radius.
 
     The engine locks a bomb's radius at placement time and the observation does
-    NOT expose it (obs bombs are [x, y, timer, owner_id]). We therefore infer it
-    from the owner's CURRENT radius bonus. If the owner picked up a radius item
-    after placing the bomb, this over-estimates the blast — which is a deliberate
-    bias toward safety (we treat more cells as dangerous, never fewer).
+    NOT expose it (obs bombs are [x, y, timer, owner_id]). When the cross-turn
+    radius tracker has captured the owner's bonus at the moment the bomb first
+    appeared, that LOCKED value is carried on ``bomb.radius`` and used directly —
+    this is exact (matching ``engine/game.py``) and stops over-estimating every
+    time the owner later grabs a radius item.
+
+    Without a locked value (e.g. a freshly *simulated* bomb we are about to place,
+    or an opponent bomb we missed) we fall back to the owner's CURRENT bonus. For
+    a bomb we are about to place this is exact; for an already-live bomb it
+    over-estimates after a late pickup — a deliberate bias toward safety (we treat
+    more cells as dangerous, never fewer).
     """
+    if bomb.radius is not None:
+        return max(1, min(MAX_BOMB_RADIUS, int(bomb.radius)))
     if 0 <= bomb.owner_id < len(state.players):
         return max(1, min(MAX_BOMB_RADIUS, 1 + int(state.players[bomb.owner_id][4])))
     return 1
@@ -720,15 +740,30 @@ import numpy as np
 
 
 
-def parse_obs(obs: dict[str, Any], agent_id: int) -> GameState:
-    """Normalize raw observation into the shared internal state."""
+def parse_obs(
+    obs: dict[str, Any],
+    agent_id: int,
+    radius_lookup: dict[tuple[int, int], int] | None = None,
+) -> GameState:
+    """Normalize raw observation into the shared internal state.
+
+    ``radius_lookup`` maps a bomb cell to its LOCKED blast radius (from
+    :class:`person_a_safety.bomb_tracker.BombRadiusTracker`). When provided, each
+    observed bomb carries its true radius instead of relying on the owner's
+    current bonus; cells absent from the lookup fall back to inference.
+    """
 
     grid = np.asarray(obs.get("map"), dtype=np.int16)
     players = _normalize_players(obs.get("players"))
     bombs_arr = _normalize_bombs(obs.get("bombs"))
 
     bombs = [
-        BombInfo(pos=(int(row), int(col)), timer=int(timer), owner_id=int(owner_id))
+        BombInfo(
+            pos=(int(row), int(col)),
+            timer=int(timer),
+            owner_id=int(owner_id),
+            radius=None if radius_lookup is None else radius_lookup.get((int(row), int(col))),
+        )
         for row, col, timer, owner_id in bombs_arr
     ]
     bomb_positions = {bomb.pos for bomb in bombs}
@@ -793,6 +828,63 @@ def _normalize_bombs(raw_bombs: Any) -> np.ndarray:
         padded[:, : arr.shape[1]] = arr
         return padded
     return arr[:, :4]
+
+
+# --- person_a_safety/bomb_tracker.py ---
+
+"""Cross-turn bomb-radius tracker.
+
+The observation exposes bombs as ``[x, y, timer, owner_id]`` but never their
+blast radius, even though the engine LOCKS that radius at placement time
+(``engine/game.py``: ``radius = 1 + player.bomb_radius_bonus``). Inferring the
+radius from the owner's *current* bonus over-estimates the blast every time the
+owner later grabs a radius item — safe, but it makes the agent needlessly timid
+around old bombs.
+
+This tracker snapshots the owner's bonus the first turn a bomb appears at a cell
+and remembers it for the bomb's whole life. Because a player's ``bomb_radius_bonus``
+only ever increases, the first-sighting snapshot is always >= the true locked
+radius (exact in the common case, at most +1 in the rare same-step pickup case),
+so the result is never an under-estimate — the safety invariant is preserved.
+
+The tracker is keyed by cell. Two live bombs can never share a cell (the engine
+forbids placing on an occupied bomb cell), and an entry is dropped the moment its
+cell no longer holds a bomb, so a new bomb later placed on a freed cell is
+re-snapshotted correctly.
+"""
+
+
+
+class BombRadiusTracker:
+    def __init__(self) -> None:
+        self._locked: dict[Cell, int] = {}
+
+    def update_from_obs(self, obs: dict) -> dict[Cell, int]:
+        """Refresh from a raw observation and return ``{cell: locked_radius}``.
+
+        Pass the returned mapping to :func:`person_a_safety.obs.parse_obs` so every
+        observed bomb carries its locked radius.
+        """
+
+        players = _normalize_players(obs.get("players"))
+        bombs = _normalize_bombs(obs.get("bombs"))
+
+        current: dict[Cell, int] = {}
+        for row, col, _timer, owner in bombs:
+            pos = (int(row), int(col))
+            if pos in self._locked:
+                # Already seen: keep the radius captured at first sighting.
+                current[pos] = self._locked[pos]
+                continue
+            owner_id = int(owner)
+            radius = 1
+            if 0 <= owner_id < len(players):
+                radius = 1 + int(players[owner_id][4])
+            current[pos] = max(1, min(MAX_BOMB_RADIUS, radius))
+
+        # Replacing the dict drops any cell that no longer holds a bomb.
+        self._locked = current
+        return dict(current)
 
 
 # --- person_b_strategy/loop_tracker.py ---
@@ -954,9 +1046,21 @@ def estimate_capacity(state: GameState) -> int:
 
 from dataclasses import dataclass, replace
 from math import inf
+from time import perf_counter
 
 import numpy as np
 
+
+# Enemy lookahead depth for the trap evaluation. The hazard tensor exposes
+# HORIZON ticks; using a depth close to a bomb's fuse (7) makes the "could the
+# opponent flee?" count realistic and avoids false "kill" claims that a shorter
+# window produced when the enemy just needed one more step to reach safety.
+ENEMY_ESCAPE_HORIZON = 8
+
+
+def _past_deadline(deadline: float | None) -> bool:
+    """True once the soft per-step time budget is spent (``None`` = no budget)."""
+    return deadline is not None and perf_counter() >= deadline
 
 
 @dataclass(frozen=True)
@@ -973,6 +1077,10 @@ class ScoreWeights:
     loop: float = 3.2
     useless_bomb: float = 58.0
     stop: float = 7.0
+    # Soft anti-trap weight: discourages stepping into a pocket/corridor an
+    # opponent could seal with a bomb. Default applies to every phase profile
+    # (they construct ScoreWeights without this field).
+    confine: float = 14.0
 
 
 @dataclass(frozen=True)
@@ -1015,6 +1123,7 @@ def score_actions(
     tracker=None,
     weights: ScoreWeights | None = None,
     turn_index: int = 0,
+    deadline: float | None = None,
 ) -> dict[int, float]:
     context = build_scoring_context(state, safe_mask, hazard, tracker, weights, turn_index)
     scores = {}
@@ -1031,6 +1140,7 @@ def score_actions(
             weights=context.profile.weights,
             turn_index=turn_index,
             context=context,
+            deadline=deadline,
         )
     return scores
 
@@ -1072,6 +1182,7 @@ def score_action(
     weights: ScoreWeights | None = None,
     turn_index: int = 0,
     context: ScoringContext | None = None,
+    deadline: float | None = None,
 ) -> float:
     components = score_action_components(
         state,
@@ -1082,6 +1193,7 @@ def score_action(
         weights=weights,
         turn_index=turn_index,
         context=context,
+        deadline=deadline,
     )
     return sum(components.values())
 
@@ -1095,6 +1207,7 @@ def score_action_components(
     weights: ScoreWeights | None = None,
     turn_index: int = 0,
     context: ScoringContext | None = None,
+    deadline: float | None = None,
 ) -> dict[str, float]:
     if context is None:
         safe_mask = np.ones(len(ACTIONS), dtype=bool)
@@ -1110,13 +1223,18 @@ def score_action_components(
 
     # The post-bomb hazard is the single most expensive thing we simulate; share
     # one copy between the escape-quality and trap evaluations for PLACE_BOMB.
+    # Skipped once the per-step time budget is spent (``sim_ran`` stays False),
+    # in which case the bomb is judged from the cheap signals only — the safe
+    # mask has already certified an escape exists, so this only loses upside.
     trap_raw = 0.0
     escape_quality = 0.0
-    if action == PLACE_BOMB and _can_simulate_bomb(state):
+    sim_ran = False
+    if action == PLACE_BOMB and _can_simulate_bomb(state) and not _past_deadline(deadline):
         simulated = copy_state_with_new_bomb_at_self(state)
         sim_hazard = compute_hazard_map(simulated)
         escape_quality = bomb_escape_quality(state, simulated, sim_hazard)
         trap_raw = trap_score(state, hazard, simulated, sim_hazard)
+        sim_ran = True
     gain_here = box_gain(state)
     offense = pressure_raw + trap_raw
 
@@ -1133,6 +1251,8 @@ def score_action_components(
         "bomb_escape_quality": 0.0,
         "danger_penalty": -weights.danger * danger_penalty(next_pos, earliest),
         "enemy_risk_penalty": enemy_risk_penalty(state, action, next_pos, weights, turn_index),
+        "confinement_penalty": 0.0,
+        "enemy_bomb_penalty": 0.0,
         "loop_penalty": 0.0,
         "stop_penalty": -weights.stop if action == STOP else 0.0,
         "useless_bomb_penalty": useless_bomb_penalty(
@@ -1145,11 +1265,21 @@ def score_action_components(
         ),
     }
 
-    if action == PLACE_BOMB:
+    if action == PLACE_BOMB and sim_ran:
         if escape_quality <= 0.0:
             components["useless_bomb_penalty"] -= weights.useless_bomb
         elif gain_here > 0 or offense > 0:
             components["bomb_escape_quality"] = weights.survival * min(0.75, escape_quality)
+
+    # Anti-trap: only when we are currently SAFE (when already fleeing, the safe
+    # mask + escape bias own the decision and we must not block a needed escape).
+    if action != PLACE_BOMB and state.opponents and int(earliest[state.self_pos]) >= INF:
+        components["confinement_penalty"] = confinement_penalty(
+            state, next_pos, weights, turn_index
+        )
+        components["enemy_bomb_penalty"] = enemy_bomb_escape_penalty(
+            state, next_pos, weights, turn_index, deadline
+        )
 
     apply_escape_bias(components, state, action, next_pos, earliest, weights)
 
@@ -1490,13 +1620,21 @@ def trap_score(
     if sim_hazard is None:
         sim_hazard = compute_hazard_map(simulated)
 
-    before = enemy_escape_count(state, enemy, hazard)
+    before = enemy_escape_count(state, enemy, hazard, horizon=ENEMY_ESCAPE_HORIZON)
     if before <= 0:
         return 0.0
-    after = enemy_escape_count(simulated, enemy, sim_hazard)
-    if after == 0:
-        return 1.5  # cornered: a likely kill
-    return min(2.5, (before - after) / float(before))  # fraction of escapes removed
+    after = enemy_escape_count(simulated, enemy, sim_hazard, horizon=ENEMY_ESCAPE_HORIZON)
+    if after <= 0:
+        return 1.5  # cornered with no escape inside a near-fuse horizon: a likely kill
+    removed_frac = (before - after) / float(before)
+    if removed_frac <= 0.0:
+        return 0.0
+    # Discount "trap ảo": a bomb that still leaves the enemy several escapes is
+    # weak. Weight the removed fraction by how cornered the enemy actually ends up
+    # (small ``after``), so only near-kills keep a high score. The deeper enemy
+    # horizon above also kills the false "after==0" claims a short window produced.
+    confinement = 2.0 / (2.0 + after)  # after=1 -> 0.67, =2 -> 0.5, =4 -> 0.33
+    return min(2.0, removed_frac * confinement * 1.5)
 
 
 def enemy_escape_count(state: GameState, enemy_pos: Cell, hazard: np.ndarray, horizon: int = 6) -> int:
@@ -1553,6 +1691,86 @@ def enemy_risk_penalty(
     # When chasing late we accept more proximity to push for kills.
     scale = 0.5 if turn_index >= 350 else 1.0
     return -weights.enemy_risk * scale * min(risk, 6.0)
+
+
+def confinement_penalty(
+    state: GameState,
+    next_pos: Cell,
+    weights: ScoreWeights,
+    turn_index: int,
+) -> float:
+    """Cheap, always-on penalty for stepping into a pocket/corridor near an enemy.
+
+    A cell with few ways out is somewhere an opponent can seal or flush with a
+    single bomb next turn. Pure geometry (no simulation), so it runs every step
+    as a soft re-ordering signal — the safe mask is still the hard gate; this
+    just biases the agent toward open ground when a rival is close.
+    """
+
+    if not state.opponents:
+        return 0.0
+    open_n = open_neighbors(state, next_pos)
+    if open_n >= 3:
+        return 0.0
+    nearest = min(manhattan(next_pos, enemy) for enemy in state.opponents)
+    if nearest > 3:
+        return 0.0
+
+    severity = 1.0 if open_n <= 1 else 0.35   # pocket (only the way back) vs corridor
+    proximity = max(0.0, (4 - nearest) / 3.0)  # 1.0 adjacent .. 0.33 at d==3
+    scale = 0.5 if turn_index >= 350 else 1.0
+    return -weights.confine * scale * severity * proximity
+
+
+def enemy_bomb_escape_penalty(
+    state: GameState,
+    next_pos: Cell,
+    weights: ScoreWeights,
+    turn_index: int,
+    deadline: float | None = None,
+) -> float:
+    """Simulated anti-trap: would the nearest opponent's bomb cut our escape?
+
+    Places a hypothetical bomb on the closest opponent's own cell and checks
+    whether, after we move to ``next_pos``, we still have an escape path under the
+    combined fire. If not, ``next_pos`` is a trap the enemy can spring, so we
+    penalise it. Gated on the time budget and on ``next_pos`` already being a bit
+    confined (in the open we always have escapes), so the extra hazard map + BFS
+    only runs when it can change the decision.
+    """
+
+    if not state.opponents or _past_deadline(deadline):
+        return 0.0
+    if open_neighbors(state, next_pos) >= 3:
+        return 0.0
+    enemy = min(state.opponents, key=lambda e: manhattan(next_pos, e))
+    distance = manhattan(next_pos, enemy)
+    if distance < 1 or distance > 3:
+        return 0.0
+
+    owner_id = _enemy_player_index(state, enemy)
+    threat = replace(
+        state,
+        self_pos=next_pos,
+        bombs=[*state.bombs, BombInfo(pos=enemy, timer=BOMB_TIMER, owner_id=owner_id)],
+        bomb_positions={*state.bomb_positions, enemy},
+    )
+    threat_hazard = compute_hazard_map(threat)
+    # We just spent a step reaching next_pos, so the escape search starts at t=1.
+    if has_escape_path(threat, next_pos, threat_hazard, start_time=1):
+        return 0.0
+    scale = 0.5 if turn_index >= 350 else 1.0
+    return -weights.confine * scale
+
+
+def _enemy_player_index(state: GameState, pos: Cell) -> int:
+    """Player index of the alive opponent standing on ``pos`` (-1 if none)."""
+    for idx, player in enumerate(state.players):
+        if idx == state.agent_id:
+            continue
+        if int(player[2]) == 1 and (int(player[0]), int(player[1])) == pos:
+            return idx
+    return -1
 
 
 def useless_bomb_penalty(
@@ -1757,20 +1975,28 @@ from math import inf
 
 
 class RulePolicy:
-    """Rule_v1 policy: score only actions allowed by A's safe mask."""
+    """Rule_v1 policy: score only actions allowed by A's safe mask.
 
-    def __init__(self):
+    ``weights`` overrides the per-phase weight schedule with a single fixed
+    ``ScoreWeights`` for every turn — used by the offline weight tuner
+    (``train/tune_weights.py``); ``None`` keeps the shipped phase profiles.
+    """
+
+    def __init__(self, weights=None):
         self.loop_tracker = AntiLoopTracker()
         self.turn_index = 0
+        self.weights = weights
 
-    def choose_action(self, state, safe_mask, hazard) -> int:
+    def choose_action(self, state, safe_mask, hazard, deadline=None) -> int:
         self.loop_tracker.observe_state(state)
         scores = score_actions(
             state,
             safe_mask,
             hazard,
             tracker=self.loop_tracker,
+            weights=self.weights,
             turn_index=self.turn_index,
+            deadline=deadline,
         )
 
         action = self._best_action(state, scores)
@@ -1797,6 +2023,15 @@ class RulePolicy:
 
 # --- Agent entrypoint ---
 
+from time import perf_counter
+
+
+# The engine gives each ``act`` call 100 ms. The safety gate (hazard + safe mask +
+# final shield) is mandatory and always runs; only the OPTIONAL strategy
+# simulations (bomb-trap / escape-quality / enemy-bomb threat) are skipped once
+# this soft budget is spent, leaving head-room for the shield. Chosen well under
+# 100 ms so even a slow evaluator host stays inside the hard limit.
+ACT_BUDGET_MS = 75.0
 
 
 class Agent:
@@ -1807,13 +2042,17 @@ class Agent:
     def __init__(self, agent_id: int):
         self.agent_id = int(agent_id)
         self.policy = RulePolicy()
+        self.radius_tracker = BombRadiusTracker()
 
     def act(self, obs: dict) -> int:
+        started = perf_counter()
         try:
-            state = parse_obs(obs, self.agent_id)
+            radius_lookup = self.radius_tracker.update_from_obs(obs)
+            state = parse_obs(obs, self.agent_id, radius_lookup=radius_lookup)
             hazard = compute_hazard_map(state)
             mask = safe_actions(state, hazard)
-            raw_action = self.policy.choose_action(state, mask, hazard)
+            deadline = started + ACT_BUDGET_MS / 1000.0
+            raw_action = self.policy.choose_action(state, mask, hazard, deadline=deadline)
             return int(final_shield(raw_action, state, hazard, mask))
         except Exception:
             return STOP

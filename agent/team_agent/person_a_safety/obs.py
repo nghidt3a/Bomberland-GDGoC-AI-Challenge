@@ -6,15 +6,30 @@ from .constants import BOX, GRASS, ITEM_CAPACITY, ITEM_RADIUS, WALL
 from .state import BombInfo, GameState
 
 
-def parse_obs(obs: dict[str, Any], agent_id: int) -> GameState:
-    """Normalize raw observation into the shared internal state."""
+def parse_obs(
+    obs: dict[str, Any],
+    agent_id: int,
+    radius_lookup: dict[tuple[int, int], int] | None = None,
+) -> GameState:
+    """Normalize raw observation into the shared internal state.
+
+    ``radius_lookup`` maps a bomb cell to its LOCKED blast radius (from
+    :class:`person_a_safety.bomb_tracker.BombRadiusTracker`). When provided, each
+    observed bomb carries its true radius instead of relying on the owner's
+    current bonus; cells absent from the lookup fall back to inference.
+    """
 
     grid = np.asarray(obs.get("map"), dtype=np.int16)
     players = _normalize_players(obs.get("players"))
     bombs_arr = _normalize_bombs(obs.get("bombs"))
 
     bombs = [
-        BombInfo(pos=(int(row), int(col)), timer=int(timer), owner_id=int(owner_id))
+        BombInfo(
+            pos=(int(row), int(col)),
+            timer=int(timer),
+            owner_id=int(owner_id),
+            radius=None if radius_lookup is None else radius_lookup.get((int(row), int(col))),
+        )
         for row, col, timer, owner_id in bombs_arr
     ]
     bomb_positions = {bomb.pos for bomb in bombs}

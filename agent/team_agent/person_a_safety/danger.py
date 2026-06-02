@@ -4,19 +4,33 @@ from .constants import HORIZON, INF, MAX_BOMB_RADIUS
 from .state import BombInfo, Cell, GameState
 
 
-def in_bounds(shape: tuple[int, int], cell: Cell) -> bool:
+# NB: named ``danger_in_bounds`` (not ``in_bounds``) on purpose — ``search.py``
+# also defines an ``in_bounds`` with a different signature, and the one-file
+# submission bundle puts both in a single namespace. Distinct names keep the
+# bundle correct; ``scripts/participant/build_team_bundle.py`` also fails the
+# build if two bundled modules ever export the same top-level name.
+def danger_in_bounds(shape: tuple[int, int], cell: Cell) -> bool:
     return 0 <= cell[0] < shape[0] and 0 <= cell[1] < shape[1]
 
 
 def bomb_radius(state: GameState, bomb: BombInfo) -> int:
-    """Estimate a bomb's blast radius.
+    """Return a bomb's blast radius.
 
     The engine locks a bomb's radius at placement time and the observation does
-    NOT expose it (obs bombs are [x, y, timer, owner_id]). We therefore infer it
-    from the owner's CURRENT radius bonus. If the owner picked up a radius item
-    after placing the bomb, this over-estimates the blast — which is a deliberate
-    bias toward safety (we treat more cells as dangerous, never fewer).
+    NOT expose it (obs bombs are [x, y, timer, owner_id]). When the cross-turn
+    radius tracker has captured the owner's bonus at the moment the bomb first
+    appeared, that LOCKED value is carried on ``bomb.radius`` and used directly —
+    this is exact (matching ``engine/game.py``) and stops over-estimating every
+    time the owner later grabs a radius item.
+
+    Without a locked value (e.g. a freshly *simulated* bomb we are about to place,
+    or an opponent bomb we missed) we fall back to the owner's CURRENT bonus. For
+    a bomb we are about to place this is exact; for an already-live bomb it
+    over-estimates after a late pickup — a deliberate bias toward safety (we treat
+    more cells as dangerous, never fewer).
     """
+    if bomb.radius is not None:
+        return max(1, min(MAX_BOMB_RADIUS, int(bomb.radius)))
     if 0 <= bomb.owner_id < len(state.players):
         return max(1, min(MAX_BOMB_RADIUS, 1 + int(state.players[bomb.owner_id][4])))
     return 1
@@ -37,7 +51,7 @@ def blast_cells(pos: Cell, radius: int, walls: np.ndarray, boxes: np.ndarray) ->
             row += dr
             col += dc
             cell = (row, col)
-            if not in_bounds(shape, cell):
+            if not danger_in_bounds(shape, cell):
                 break
             if bool(walls[cell]):
                 break

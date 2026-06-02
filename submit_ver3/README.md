@@ -11,8 +11,12 @@ root. File này đã bundle toàn bộ module nội bộ để tránh lỗi eval
 'person_a_safety'`).
 
 `act()` luôn trả int trong `[0,5]`, không import thư viện ngoài ngoài `numpy`,
-trung bình ~6.8-7.4 ms/step trong timing gate mới (max spike 41.75-70.47 ms,
-giới hạn 100 ms).
+trung bình ~3.7 ms/step trong timing gate mới (max spike ~12 ms, giới hạn 100 ms)
+— giảm mạnh so với trước nhờ time-budget guard + bomb-radius tracker.
+
+> Bundle được sinh tái lập bằng `python -m scripts.participant.build_team_bundle`
+> (ghép module theo thứ tự phụ thuộc, strip import nội bộ, **fail nếu hai module
+> trùng tên top-level** — đúng loại lỗi từng làm hỏng bundle thủ công).
 
 ---
 
@@ -77,27 +81,64 @@ giới hạn 100 ms).
    boxes/items/bombs để chọn `late_leading` (đang dẫn → thủ, mobility cao) hay
    `late_chasing` (đang đuổi → tăng pressure/trap, bomb có ích).
 
+### Nâng cấp thêm (5 cải tiến mới)
+
+11. **Bomb-radius tracker liên-turn** (`person_a_safety/bomb_tracker.py`).
+   Observation không lộ bán kính bom, nhưng engine **khoá bán kính lúc đặt**.
+   Tracker snapshot bonus của chủ bom **lần đầu** thấy bom và giữ nguyên — thôi
+   over-estimate mỗi khi chủ bom nhặt thêm radius item. Vì bonus chỉ tăng, snapshot
+   luôn ≥ bán kính thật ⇒ **không bao giờ under-estimate** ⇒ self-death vẫn = 0.
+
+12. **Anti-trap (chống bị nhốt)** trong `scoring.py`. Hai tín hiệu mềm (chỉ sắp lại
+   các action đã an toàn, không đụng hard mask), chỉ áp khi đang an toàn để không
+   cản đường thoát: `confinement_penalty` (rẻ — phạt bước vào pocket/hẻm cụt cạnh
+   địch) và `enemy_bomb_escape_penalty` (mô phỏng địch gần nhất đặt bom rồi kiểm tra
+   ta còn `has_escape_path` không). Vá đúng lỗ hổng "đi vào ngõ cụt rồi bị bom bịt".
+
+13. **Time-budget guard** (`agent.py` `ACT_BUDGET_MS=75`). Safety gate luôn chạy;
+   chỉ các sim chiến lược đắt (trap / escape-quality / enemy-bomb) bị bỏ khi quá
+   ngân sách. Biến spike ~70 ms → ~12 ms, cận trên cứng < 100 ms trên máy chậm.
+
+14. **Calibrate `trap_score`** (giảm "trap ảo"). Mở rộng horizon lookahead của địch
+   (`ENEMY_ESCAPE_HORIZON=8`, sát ngòi nổ 7) để bớt false-kill; chiết khấu giá trị
+   bẫy theo độ "bị dồn" thực sự (`confinement = 2/(2+after)`) — chỉ near-kill mới
+   điểm cao, bẫy còn nhiều đường thoát bị hạ điểm mạnh.
+
+15. **CEM auto-tune harness** (`train/tune_weights.py`). Tìm `ScoreWeights` bằng
+   cross-entropy method, objective từ `strategy_metrics` (rank thấp + self_death=0 +
+   boxes/items). In ra bộ trọng số tốt nhất để review; **không tự đổi** weights đang
+   ship. Chạy ngắn = smoke test (xác nhận vòng lặp cải thiện prior), chạy dài để ra
+   ứng viên.
+
 ---
 
 ## Bằng chứng kiểm thử
 
-- **65 unit test** (`agent/team_agent/smoke_tests`) pass, gồm các test mới:
-  `test_action_mapping`, double-burn (`test_cell_that_burns_twice...`),
-  box-removal (`test_box_removed_early_extends_a_later_blast`),
-  `test_stop_not_rewarded_as_farm`.
+- **79 unit test** (`agent/team_agent/smoke_tests`) pass, gồm các test mới của
+  đợt nâng cấp: `test_bomb_radius_tracker`, `test_anti_trap`,
+  `test_trap_calibration`, `test_time_budget` (15 test mới) — cùng bộ cũ
+  (`test_action_mapping`, double-burn, box-removal, `test_stop_not_rewarded_as_farm`).
 - **Engine cross-validation harness** (`test_engine_safety.py`, drive BomberEnv
-  thật): 60 seed/500 step, self-death = 0, bad-actions = 0.
-- **Timing**: seed 1/6 match max 70.47 ms, avg 7.36 ms; seed 1/10 match max
-  53.21 ms, avg 7.44 ms; seed 50/10 match max 41.75 ms, avg 6.83 ms.
+  thật): 60 seed/500 step trên source, self-death = 0, bad-actions = 0. Bản
+  **bundle one-file** (`submit_ver3/agent.py`) cũng được certify riêng: 40 seed,
+  self-death = 0, bad-actions = 0.
+- **Timing** (sau nâng cấp): seed 1/10 match avg 3.75 ms, max 11.10 ms; seed 50/10
+  match avg 3.69 ms, max 11.97 ms — cách xa giới hạn 100 ms.
+- **Strategy_metrics** (seed 1, 20 trận, vs Tactical/Smarter/Genius): win 0.10,
+  draw 0.90, **self_death 0.00**, **avg_rank 0.00**, boxes 7.40, items 8.00,
+  bombs 53.05 (bundle khớp y hệt source). So ver3 trước: win 0.05 → 0.10,
+  self_death 0.05 → 0.00, avg_rank 0.05 → 0.00.
 
 Chạy lại:
 
 ```powershell
 python -m pytest agent/team_agent/smoke_tests -q
 $env:TEAM_SAFETY_SEEDS='60'; $env:TEAM_SAFETY_MAX_STEPS='500'; python -m pytest agent/team_agent/smoke_tests/test_engine_safety.py -q -s
+python -m scripts.participant.build_team_bundle   # đồng bộ submit_ver3 + bundle + zip
 python -m scripts.participant.estimate_agent_time submit_ver3 --opponents TacticalRuleAgent SmarterRuleAgent GeniusRuleAgent --num_matches 10 --seed 1
 python -m scripts.participant.estimate_agent_time submit_ver3 --opponents TacticalRuleAgent SmarterRuleAgent GeniusRuleAgent --num_matches 10 --seed 50
 python -m agent.team_agent.bench.strategy_metrics --agent-path submit_ver3 --num-episodes 20 --seed 1
+python -m agent.team_agent.train.tune_weights --iters 8 --pop 16 --episodes 12 --seed 1   # auto-tune (tuỳ chọn)
 ```
 
 > Benchmark trước/sau (win/draw/self-death) xem mục dưới — đo bằng

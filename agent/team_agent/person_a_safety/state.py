@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List, Set, Tuple
+from typing import List, Optional, Set, Tuple
 
 import numpy as np
 
@@ -11,6 +11,12 @@ class BombInfo:
     pos: Cell
     timer: int
     owner_id: int
+    # Blast radius LOCKED at placement time. The observation never exposes it, so
+    # callers that know the true radius (the cross-turn radius tracker) pass it
+    # here; ``None`` means "infer from the owner's current bonus" (see
+    # ``danger.bomb_radius``). Kept last with a default so existing positional
+    # constructions ``BombInfo(pos, timer, owner_id)`` stay valid.
+    radius: Optional[int] = None
 
 
 @dataclass

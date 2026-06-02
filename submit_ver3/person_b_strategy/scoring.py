@@ -1,10 +1,12 @@
 from dataclasses import dataclass, replace
 from math import inf
+from time import perf_counter
 
 import numpy as np
 
 from person_a_safety.constants import (
     ACTIONS,
+    BOMB_TIMER,
     INF,
     ITEM_CAPACITY,
     ITEM_RADIUS,
@@ -15,8 +17,19 @@ from person_a_safety.constants import (
 from person_a_safety.bomb import copy_state_with_new_bomb_at_self
 from person_a_safety.danger import blast_cells, compute_hazard_map, earliest_at, hazard_to_earliest
 from person_a_safety.masks import action_destination
-from person_a_safety.search import eventually_safe, passable, time_expanded_bfs
-from person_a_safety.state import Cell, GameState
+from person_a_safety.search import eventually_safe, has_escape_path, passable, time_expanded_bfs
+from person_a_safety.state import BombInfo, Cell, GameState
+
+# Enemy lookahead depth for the trap evaluation. The hazard tensor exposes
+# HORIZON ticks; using a depth close to a bomb's fuse (7) makes the "could the
+# opponent flee?" count realistic and avoids false "kill" claims that a shorter
+# window produced when the enemy just needed one more step to reach safety.
+ENEMY_ESCAPE_HORIZON = 8
+
+
+def _past_deadline(deadline: float | None) -> bool:
+    """True once the soft per-step time budget is spent (``None`` = no budget)."""
+    return deadline is not None and perf_counter() >= deadline
 
 
 @dataclass(frozen=True)
@@ -33,6 +46,10 @@ class ScoreWeights:
     loop: float = 3.2
     useless_bomb: float = 58.0
     stop: float = 7.0
+    # Soft anti-trap weight: discourages stepping into a pocket/corridor an
+    # opponent could seal with a bomb. Default applies to every phase profile
+    # (they construct ScoreWeights without this field).
+    confine: float = 14.0
 
 
 @dataclass(frozen=True)
@@ -75,6 +92,7 @@ def score_actions(
     tracker=None,
     weights: ScoreWeights | None = None,
     turn_index: int = 0,
+    deadline: float | None = None,
 ) -> dict[int, float]:
     context = build_scoring_context(state, safe_mask, hazard, tracker, weights, turn_index)
     scores = {}
@@ -91,6 +109,7 @@ def score_actions(
             weights=context.profile.weights,
             turn_index=turn_index,
             context=context,
+            deadline=deadline,
         )
     return scores
 
@@ -132,6 +151,7 @@ def score_action(
     weights: ScoreWeights | None = None,
     turn_index: int = 0,
     context: ScoringContext | None = None,
+    deadline: float | None = None,
 ) -> float:
     components = score_action_components(
         state,
@@ -142,6 +162,7 @@ def score_action(
         weights=weights,
         turn_index=turn_index,
         context=context,
+        deadline=deadline,
     )
     return sum(components.values())
 
@@ -155,6 +176,7 @@ def score_action_components(
     weights: ScoreWeights | None = None,
     turn_index: int = 0,
     context: ScoringContext | None = None,
+    deadline: float | None = None,
 ) -> dict[str, float]:
     if context is None:
         safe_mask = np.ones(len(ACTIONS), dtype=bool)
@@ -170,13 +192,18 @@ def score_action_components(
 
     # The post-bomb hazard is the single most expensive thing we simulate; share
     # one copy between the escape-quality and trap evaluations for PLACE_BOMB.
+    # Skipped once the per-step time budget is spent (``sim_ran`` stays False),
+    # in which case the bomb is judged from the cheap signals only — the safe
+    # mask has already certified an escape exists, so this only loses upside.
     trap_raw = 0.0
     escape_quality = 0.0
-    if action == PLACE_BOMB and _can_simulate_bomb(state):
+    sim_ran = False
+    if action == PLACE_BOMB and _can_simulate_bomb(state) and not _past_deadline(deadline):
         simulated = copy_state_with_new_bomb_at_self(state)
         sim_hazard = compute_hazard_map(simulated)
         escape_quality = bomb_escape_quality(state, simulated, sim_hazard)
         trap_raw = trap_score(state, hazard, simulated, sim_hazard)
+        sim_ran = True
     gain_here = box_gain(state)
     offense = pressure_raw + trap_raw
 
@@ -193,6 +220,8 @@ def score_action_components(
         "bomb_escape_quality": 0.0,
         "danger_penalty": -weights.danger * danger_penalty(next_pos, earliest),
         "enemy_risk_penalty": enemy_risk_penalty(state, action, next_pos, weights, turn_index),
+        "confinement_penalty": 0.0,
+        "enemy_bomb_penalty": 0.0,
         "loop_penalty": 0.0,
         "stop_penalty": -weights.stop if action == STOP else 0.0,
         "useless_bomb_penalty": useless_bomb_penalty(
@@ -205,11 +234,21 @@ def score_action_components(
         ),
     }
 
-    if action == PLACE_BOMB:
+    if action == PLACE_BOMB and sim_ran:
         if escape_quality <= 0.0:
             components["useless_bomb_penalty"] -= weights.useless_bomb
         elif gain_here > 0 or offense > 0:
             components["bomb_escape_quality"] = weights.survival * min(0.75, escape_quality)
+
+    # Anti-trap: only when we are currently SAFE (when already fleeing, the safe
+    # mask + escape bias own the decision and we must not block a needed escape).
+    if action != PLACE_BOMB and state.opponents and int(earliest[state.self_pos]) >= INF:
+        components["confinement_penalty"] = confinement_penalty(
+            state, next_pos, weights, turn_index
+        )
+        components["enemy_bomb_penalty"] = enemy_bomb_escape_penalty(
+            state, next_pos, weights, turn_index, deadline
+        )
 
     apply_escape_bias(components, state, action, next_pos, earliest, weights)
 
@@ -550,13 +589,21 @@ def trap_score(
     if sim_hazard is None:
         sim_hazard = compute_hazard_map(simulated)
 
-    before = enemy_escape_count(state, enemy, hazard)
+    before = enemy_escape_count(state, enemy, hazard, horizon=ENEMY_ESCAPE_HORIZON)
     if before <= 0:
         return 0.0
-    after = enemy_escape_count(simulated, enemy, sim_hazard)
-    if after == 0:
-        return 1.5  # cornered: a likely kill
-    return min(2.5, (before - after) / float(before))  # fraction of escapes removed
+    after = enemy_escape_count(simulated, enemy, sim_hazard, horizon=ENEMY_ESCAPE_HORIZON)
+    if after <= 0:
+        return 1.5  # cornered with no escape inside a near-fuse horizon: a likely kill
+    removed_frac = (before - after) / float(before)
+    if removed_frac <= 0.0:
+        return 0.0
+    # Discount "trap ảo": a bomb that still leaves the enemy several escapes is
+    # weak. Weight the removed fraction by how cornered the enemy actually ends up
+    # (small ``after``), so only near-kills keep a high score. The deeper enemy
+    # horizon above also kills the false "after==0" claims a short window produced.
+    confinement = 2.0 / (2.0 + after)  # after=1 -> 0.67, =2 -> 0.5, =4 -> 0.33
+    return min(2.0, removed_frac * confinement * 1.5)
 
 
 def enemy_escape_count(state: GameState, enemy_pos: Cell, hazard: np.ndarray, horizon: int = 6) -> int:
@@ -613,6 +660,86 @@ def enemy_risk_penalty(
     # When chasing late we accept more proximity to push for kills.
     scale = 0.5 if turn_index >= 350 else 1.0
     return -weights.enemy_risk * scale * min(risk, 6.0)
+
+
+def confinement_penalty(
+    state: GameState,
+    next_pos: Cell,
+    weights: ScoreWeights,
+    turn_index: int,
+) -> float:
+    """Cheap, always-on penalty for stepping into a pocket/corridor near an enemy.
+
+    A cell with few ways out is somewhere an opponent can seal or flush with a
+    single bomb next turn. Pure geometry (no simulation), so it runs every step
+    as a soft re-ordering signal — the safe mask is still the hard gate; this
+    just biases the agent toward open ground when a rival is close.
+    """
+
+    if not state.opponents:
+        return 0.0
+    open_n = open_neighbors(state, next_pos)
+    if open_n >= 3:
+        return 0.0
+    nearest = min(manhattan(next_pos, enemy) for enemy in state.opponents)
+    if nearest > 3:
+        return 0.0
+
+    severity = 1.0 if open_n <= 1 else 0.35   # pocket (only the way back) vs corridor
+    proximity = max(0.0, (4 - nearest) / 3.0)  # 1.0 adjacent .. 0.33 at d==3
+    scale = 0.5 if turn_index >= 350 else 1.0
+    return -weights.confine * scale * severity * proximity
+
+
+def enemy_bomb_escape_penalty(
+    state: GameState,
+    next_pos: Cell,
+    weights: ScoreWeights,
+    turn_index: int,
+    deadline: float | None = None,
+) -> float:
+    """Simulated anti-trap: would the nearest opponent's bomb cut our escape?
+
+    Places a hypothetical bomb on the closest opponent's own cell and checks
+    whether, after we move to ``next_pos``, we still have an escape path under the
+    combined fire. If not, ``next_pos`` is a trap the enemy can spring, so we
+    penalise it. Gated on the time budget and on ``next_pos`` already being a bit
+    confined (in the open we always have escapes), so the extra hazard map + BFS
+    only runs when it can change the decision.
+    """
+
+    if not state.opponents or _past_deadline(deadline):
+        return 0.0
+    if open_neighbors(state, next_pos) >= 3:
+        return 0.0
+    enemy = min(state.opponents, key=lambda e: manhattan(next_pos, e))
+    distance = manhattan(next_pos, enemy)
+    if distance < 1 or distance > 3:
+        return 0.0
+
+    owner_id = _enemy_player_index(state, enemy)
+    threat = replace(
+        state,
+        self_pos=next_pos,
+        bombs=[*state.bombs, BombInfo(pos=enemy, timer=BOMB_TIMER, owner_id=owner_id)],
+        bomb_positions={*state.bomb_positions, enemy},
+    )
+    threat_hazard = compute_hazard_map(threat)
+    # We just spent a step reaching next_pos, so the escape search starts at t=1.
+    if has_escape_path(threat, next_pos, threat_hazard, start_time=1):
+        return 0.0
+    scale = 0.5 if turn_index >= 350 else 1.0
+    return -weights.confine * scale
+
+
+def _enemy_player_index(state: GameState, pos: Cell) -> int:
+    """Player index of the alive opponent standing on ``pos`` (-1 if none)."""
+    for idx, player in enumerate(state.players):
+        if idx == state.agent_id:
+            continue
+        if int(player[2]) == 1 and (int(player[0]), int(player[1])) == pos:
+            return idx
+    return -1
 
 
 def useless_bomb_penalty(
